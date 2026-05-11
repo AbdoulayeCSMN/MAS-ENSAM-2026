@@ -39,3 +39,15 @@ Les agents actuels peinent à traiter des bases de code larges et complexes, et 
   <br>
   <em>Figure 1 : Architecture multi-agent de SecureCodeAgent</em>
 </div>
+
+
+
+##  Participants
+
+| Nom | Statut | Contributions |
+|-----|--------|---------------|
+| **Hinimdou Morsia** | Élève ingénieur IA & Technologie des Données | Architecture, développement, évaluation |
+| **Guitdam** | Élève ingénieur IA & Technologie des Données | Intégration des benchmarks, tests |
+| **DJERI-ALASSANI OUBENOUPOU** | Élève ingénieur IA & Technologie des Données | Documentation, analyse des résultats |
+
+---
