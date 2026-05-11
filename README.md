@@ -42,12 +42,12 @@ Les agents actuels peinent à traiter des bases de code larges et complexes, et 
 
 
 
-##  Participants
+## Participants
 
 | Nom | Statut | Contributions |
-|-----|--------|---------------|
-| **Hinimdou Morsia** | Élève ingénieur IA & Technologie des Données | Architecture, développement, évaluation |
-| **Guitdam** | Élève ingénieur IA & Technologie des Données | Intégration des benchmarks, tests |
-| **DJERI-ALASSANI OUBENOUPOU** | Élève ingénieur IA & Technologie des Données | Documentation, analyse des résultats |
+|---|---|---|
+| **Hinimdou Morsia Guitdam** | Élève ingénieur en IA & Technologie des Données | Architecture, développement, évaluation |
+| **DJERI-ALASSANI OUBENOUPOU** | Élève ingénieur en IA & Technologie des Données | Documentation, analyse des résultats |
+| **Chaibou Saidou Abdoulaye** | Élève ingénieur en IA & Technologie des Données | Support technique, validation des expérimentations |
 
 ---
