@@ -1,4 +1,4 @@
-#  MultiAgentSecurite
+#  Multi-Agent Security
 
 <div align="center">
 
@@ -17,7 +17,7 @@
 
 Les agents IA autonomes capables de comprendre, réviser et réparer du code en production représentent une opportunité transformatrice pour la productivité et la sécurité du génie logiciel. Les agents actuels — Devin, SWE-agent, GitHub Copilot Workspace — montrent des performances impressionnantes sur des tâches de programmation isolées mais présentent des faiblesses systématiques sur les grandes bases de code.
 
-**MultiAgentSecurite** est une architecture d'agent spécialement conçue pour la révision de code orientée sécurité et la correction automatique des vulnérabilités.
+**Multi-Agent Security** est une architecture d'agent spécialement conçue pour la révision de code orientée sécurité et la correction automatique des vulnérabilités.
 ---
 
 ##  Problématique
