@@ -141,7 +141,140 @@ MultiAgentSecurite/
     └── static/
         └── index.html       # Interface web minimale
 ```
-        
+
+# **Lancement du projet - Explication claire**
+
+---
+
+## **ÉTAPE 1 : Télécharger le projet**
+
+```bash
+git clone https://github.com/hinimdoumorsia/MultiAgentSecurite.git
+```
+
+👉 Cette commande permet de récupérer le projet depuis GitHub sur ta machine locale.
+
+Ensuite, place-toi dans un dossier de travail :
+
+```bash
+# Exemple : Bureau
+cd C:\Users\TonNom\Desktop
+
+# Exemple : Documents
+cd C:\Users\TonNom\Documents
+```
+
+Puis entre dans le projet cloné :
+
+```bash
+cd MultiAgentSecurite
+```
+
+---
+
+##  **ÉTAPE 2 : Créer l'environnement virtuel**
+
+```bash
+python -m venv env_travail
+env_travail\Scripts\activate
+```
+
+👉 Ici on crée un environnement isolé pour éviter les conflits de dépendances avec d'autres projets Python.
+
+✔ Quand tu vois `(env_travail)` dans le terminal → environnement activé.
+
+---
+
+## **ÉTAPE 3 : Installer les dépendances**
+
+```bash
+pip install -r requirements.txt
+```
+
+👉 Cette commande installe toutes les bibliothèques nécessaires au projet (FastAPI, outils IA, etc.).
+
+⏳ Attends 1 à 2 minutes selon ta connexion.
+
+---
+
+## **ÉTAPE 4 : Créer tes clés API**
+
+👉 Le projet utilise plusieurs modèles d’IA externes, donc il faut des clés API.
+
+---
+
+### **4.1 Groq (IA rapide)**
+
+- Va sur https://console.groq.com  
+- Crée un compte gratuit  
+- Va dans **API Keys**  
+- Génère une clé
+
+👉 Exemple de clé : `gsk_xxxxx`
+
+---
+
+### **4.2 NVIDIA (IA puissante)**
+
+- Va sur https://build.nvidia.com  
+- Crée un compte  
+- Va dans **API Keys**  
+- Génère une clé
+
+👉 Exemple : `nvapi-xxxxx`
+
+---
+
+### **4.3 GitHub Token (optionnel)**
+
+- Va sur https://github.com/settings/tokens  
+- Clique sur **Generate new token**  
+- Coche `repo` + `security_events`
+
+👉 Ce token permet au système d’interagir avec GitHub si nécessaire.
+
+---
+
+## **ÉTAPE 5 : Créer le fichier `.env`**
+
+👉 Le fichier `.env` contient toutes les clés sensibles du projet.
+
+Crée-le dans le dossier `src/` :
+
+```env
+GROQ_API_KEY=gsk_votre_clé_ici
+NVIDIA_API_KEY=nvapi_votre_clé_ici
+GITHUB_TOKEN=votre_token_ici
+```
+
+⚠️ Important : ne jamais partager ce fichier publiquement.
+
+---
+
+##  **ÉTAPE 6 : Lancer le projet**
+
+```bash
+python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
+```
+
+👉 Cette commande démarre l’API FastAPI du projet.
+
+---
+
+## ** Succès attendu**
+
+Si tout fonctionne correctement, tu dois voir :
+
+```
+INFO: Uvicorn running on http://0.0.0.0:8000
+INFO: Application startup complete.
+```
+
+👉 Cela signifie que ton système multi-agents est bien lancé et prêt à être utilisé.
+
+
+
+
 ## Participants
 
 | Nom | Statut | Contributions |
