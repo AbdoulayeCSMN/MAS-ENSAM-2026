@@ -35,7 +35,7 @@ Les agents actuels peinent à traiter des bases de code larges et complexes, et 
 ##  Architecture
 
 <div align="center">
-  <img src="image/secure_code_agent_architecture.svg" alt="Architecture de SecureCodeAgent" width="800">
+  <img src="image/architecturecompletsysteme.svg" alt="Architecture de SecureCodeAgent" width="800">
   <br>
   <em>Figure 1 : Architecture multi-agent de SecureCodeAgent</em>
 </div>
