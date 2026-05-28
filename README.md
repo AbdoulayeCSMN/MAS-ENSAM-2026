@@ -261,7 +261,7 @@ python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uv
 
 ---
 
-## ** Succès attendu**
+## **Succès attendu**
 
 Si tout fonctionne correctement, tu dois voir :
 
