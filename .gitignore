@@ -1,0 +1,21 @@
+```gitignore id="adnngv"
+# Environnement virtuel
+env_travail/
+venv/
+env/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Variables sensibles
+.env
+src/.env
+
+# Cache
+.scan_cache/
+.memory_cache.db
+
+# Backup
+*.bak
+```
