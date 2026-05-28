@@ -20,19 +20,59 @@ Les agents IA autonomes capables de comprendre, réviser et réparer du code en 
 **Multi-Agent Security** est une architecture d'agent spécialement conçue pour la révision de code orientée sécurité et la correction automatique des vulnérabilités.
 ---
 
-##  Problématique
+##  **Problématique**
 
-L'intégration d'agents IA dans les pipelines de développement logiciel soulève des questions fondamentales :
+L'intégration d’agents d’intelligence artificielle dans les pipelines de développement logiciel soulève aujourd’hui plusieurs questions fondamentales :
 
-- ❓ **Fiabilité** : Comment garantir des corrections justes ?
-- ❓ **Sécurité** : Comment éviter d'introduire de nouvelles vulnérabilités ?
-- ❓ **Alignement** : Comment maintenir la cohérence architecturale ?
+* ❓ **Fiabilité** : comment garantir des corrections justes et pertinentes ?
+* ❓ **Sécurité** : comment éviter l’introduction de nouvelles vulnérabilités ?
+* ❓ **Alignement architectural** : comment maintenir la cohérence globale du système logiciel ?
 
-Les agents actuels peinent à traiter des bases de code larges et complexes, et introduisent des vulnérabilités dans **8.7% des cas** lors des corrections.
+Les agents IA actuels rencontrent encore des difficultés lorsqu’ils doivent traiter des bases de code larges, distribuées et complexes. Plusieurs études montrent également que certains systèmes automatisés peuvent introduire de nouvelles vulnérabilités lors des corrections, avec un taux pouvant atteindre **8.7 % des cas**.
+
+C’est dans ce contexte que s’inscrit ce projet de recherche. Notre objectif est de concevoir et d’implémenter, de bout en bout, une architecture complète de système multi-agents inspirée du fonctionnement collaboratif humain.
+
+De la même manière qu’une équipe d’ingénieurs collabore pour analyser, corriger, vérifier et sécuriser un système logiciel, nous cherchons ici à réunir plusieurs agents spécialisés capables de travailler ensemble afin de :
+
+* faciliter la correction automatique de code,
+* améliorer la qualité des correctifs proposés,
+* détecter et contrôler les vulnérabilités potentielles,
+* maintenir la cohérence architecturale du projet,
+* et renforcer la fiabilité globale du système.
+
+Notre système est constitué de plusieurs agents spécialisés, chacun possédant un rôle précis dans le pipeline d’analyse, de correction et de sécurisation du code.
+
+# **Multi-Agent Security Scanner - Architecture des 8 agents**
+
+## **Tableau récapitulatif des agents**
+
+| # | Agent | Rôle | LLM | Type | Séquentiel/Parallèle | Entrée | Sortie |
+|---|-------|------|-----|------|---------------------|--------|--------|
+| 1 | **TriageAgent** | Détecter langages et fichiers | ❌ | Règles | Séquentiel (1er) | `repo_path` | `targets`, `detected_languages` |
+| 2 | **ScannerAgent** | Scan statique (Semgrep, Bandit, etc.) | ❌ | Outils externes | Séquentiel | `repo_path`, `languages` | `raw_findings`, `vulnerabilities` |
+| 3 | **MemorySafetyAgent** | Buffer overflow, use after free, memory leak | ❌ | Moteur Rust | **Parallèle** | `repo_root` (C/C++/Rust) | `memory_safety_findings` |
+| 4 | **SemanticAnalystAgent** | Fautes logiques (IDOR, auth bypass, race conditions) | ✅ | LLM + RAG | **Parallèle** | `targets` (prioritaires) | `semantic_findings` |
+| 5 | **ExploitScorerAgent** | Score CVSS, exploitabilité, priorité P1-P3 | ⚠️ Optionnel | Hybride (règles + LLM) | Séquentiel (fusion) | Toutes vulnérabilités | `cvss_score`, `is_exploitable`, `priority` |
+| 6 | **PatcherAgent** | Générer correctifs automatiques | ✅ | LLM (strong) | Séquentiel | Vulnérabilités scorées | `patch_diff` (unified diff) |
+| 7 | **ValidatorAgent** | Valider patches et vérifier régressions | ❌ | Subprocess + Semgrep | Séquentiel | `patch_diff`, fichier | `patches_validated`, `patches_rejected` |
+| 8 | **ReportAgent** | Générer rapports JSON/Markdown | ❌ | Template | Séquentiel (final) | Toutes vulnérabilités + patches | `report` (JSON/Markdown) |
 
 ---
 
-##  Architecture
+## **Orchestrateur central**
+
+| Propriété | Valeur |
+|-----------|--------|
+| **Nom** | LangGraph (`workflow.py`) |
+| **Rôle** | Centralise le flux, décide quel agent lance, gère l'état global |
+| **Type** | Hybride (hiérarchique + distribué) |
+| **État** | `AgentState` (objet partagé entre tous les agents) |
+
+---
+
+##  **Flux d'exécution**
+
+---
 
 <div align="center">
   <img src="image/architecturecompletsysteme.png" alt="Architecture de SecureCodeAgent" width="800">
