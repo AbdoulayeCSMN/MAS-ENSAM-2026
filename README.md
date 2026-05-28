@@ -48,14 +48,14 @@ Notre système est constitué de plusieurs agents spécialisés, chacun posséda
 
 | # | Agent | Rôle | LLM | Type | Séquentiel/Parallèle | Entrée | Sortie |
 |---|-------|------|-----|------|---------------------|--------|--------|
-| 1 | **TriageAgent** | Détecter langages et fichiers | ❌ | Règles | Séquentiel (1er) | `repo_path` | `targets`, `detected_languages` |
-| 2 | **ScannerAgent** | Scan statique (Semgrep, Bandit, etc.) | ❌ | Outils externes | Séquentiel | `repo_path`, `languages` | `raw_findings`, `vulnerabilities` |
-| 3 | **MemorySafetyAgent** | Buffer overflow, use after free, memory leak | ❌ | Moteur Rust | **Parallèle** | `repo_root` (C/C++/Rust) | `memory_safety_findings` |
-| 4 | **SemanticAnalystAgent** | Fautes logiques (IDOR, auth bypass, race conditions) | ✅ | LLM + RAG | **Parallèle** | `targets` (prioritaires) | `semantic_findings` |
-| 5 | **ExploitScorerAgent** | Score CVSS, exploitabilité, priorité P1-P3 | ⚠️ Optionnel | Hybride (règles + LLM) | Séquentiel (fusion) | Toutes vulnérabilités | `cvss_score`, `is_exploitable`, `priority` |
-| 6 | **PatcherAgent** | Générer correctifs automatiques | ✅ | LLM (strong) | Séquentiel | Vulnérabilités scorées | `patch_diff` (unified diff) |
-| 7 | **ValidatorAgent** | Valider patches et vérifier régressions | ❌ | Subprocess + Semgrep | Séquentiel | `patch_diff`, fichier | `patches_validated`, `patches_rejected` |
-| 8 | **ReportAgent** | Générer rapports JSON/Markdown | ❌ | Template | Séquentiel (final) | Toutes vulnérabilités + patches | `report` (JSON/Markdown) |
+| 1 | **TriageAgent** | Détecter langages et fichiers | non | Règles | Séquentiel (1er) | `repo_path` | `targets`, `detected_languages` |
+| 2 | **ScannerAgent** | Scan statique (Semgrep, Bandit, etc.) | non | Outils externes | Séquentiel | `repo_path`, `languages` | `raw_findings`, `vulnerabilities` |
+| 3 | **MemorySafetyAgent** | Buffer overflow, use after free, memory leak | non | Moteur Rust | **Parallèle** | `repo_root` (C/C++/Rust) | `memory_safety_findings` |
+| 4 | **SemanticAnalystAgent** | Fautes logiques (IDOR, auth bypass, race conditions) | oui | LLM + RAG | **Parallèle** | `targets` (prioritaires) | `semantic_findings` |
+| 5 | **ExploitScorerAgent** | Score CVSS, exploitabilité, priorité P1-P3 | Optionnel | Hybride (règles + LLM) | Séquentiel (fusion) | Toutes vulnérabilités | `cvss_score`, `is_exploitable`, `priority` |
+| 6 | **PatcherAgent** | Générer correctifs automatiques | oui| LLM (strong) | Séquentiel | Vulnérabilités scorées | `patch_diff` (unified diff) |
+| 7 | **ValidatorAgent** | Valider patches et vérifier régressions | non | Subprocess + Semgrep | Séquentiel | `patch_diff`, fichier | `patches_validated`, `patches_rejected` |
+| 8 | **ReportAgent** | Générer rapports JSON/Markdown | non | Template | Séquentiel (final) | Toutes vulnérabilités + patches | `report` (JSON/Markdown) |
 
 ---
 
