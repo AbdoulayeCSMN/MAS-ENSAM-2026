@@ -7,10 +7,10 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from orchestrator.agents.base import BaseAgent
-from orchestrator.graph.state import AgentState, Vulnerability
-from orchestrator.memory.persistent import PersistentMemory
-from orchestrator.tools.semgrep_tool import SemgrepTool
+from agents.base import BaseAgent
+from graph.state import AgentState, Vulnerability
+from memory.persistent import PersistentMemory
+from tools.semgrep_tool import SemgrepTool
 
 logger = logging.getLogger(__name__)
 

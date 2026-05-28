@@ -1,71 +1,83 @@
-"""Claude API client with prompt caching for cost/latency optimization."""
+"""LLM client using Groq + NVIDIA endpoints (NO ANTHROPIC)."""
 
 from __future__ import annotations
 
 import logging
 import os
-from functools import lru_cache
+from pathlib import Path
 
-import anthropic
+def load_env():
+    env_file = Path(__file__).parent.parent / ".env"
+    if env_file.exists():
+        for line in env_file.read_text().splitlines():
+            if "=" in line and not line.startswith("#"):
+                key, value = line.split("=", 1)
+                os.environ[key.strip()] = value.strip()
+                print(f"Loaded: {key.strip()}")
+
+load_env()
+
+from groq import Groq
+from openai import OpenAI
 
 logger = logging.getLogger(__name__)
 
-MODEL_FAST = "claude-sonnet-4-6"   # scanner, scorer, semantic
-MODEL_STRONG = "claude-opus-4-7"   # patch generation (complex reasoning)
-
-# System prompts are large and stable — ideal for prompt caching
-_CACHE_CONTROL = {"type": "ephemeral"}
+MODEL_FAST = "llama-3.1-8b-instant"
+MODEL_STRONG = "meta/llama-3.1-70b-instruct"
 
 
 class LLMClient:
     def __init__(self) -> None:
-        self._client = anthropic.Anthropic(api_key=os.environ["ANTHROPIC_API_KEY"])
-        self._cache_hits = 0
-        self._total_calls = 0
+        groq_key = os.environ.get("GROQ_API_KEY")
+        nvidia_key = os.environ.get("NVIDIA_API_KEY")
+        
+        self._groq = Groq(api_key=groq_key) if groq_key else None
+        self._nvidia = OpenAI(
+            base_url="https://integrate.api.nvidia.com/v1",
+            api_key=nvidia_key
+        ) if nvidia_key else None
 
-    def query(
-        self,
-        system: str,
-        user: str,
-        model: str = "sonnet",
-        max_tokens: int = 4096,
-    ) -> str:
-        """Send a query with prompt caching on the system prompt."""
-        resolved_model = MODEL_STRONG if model == "opus" else MODEL_FAST
+        self._total_calls = 0
+        
+        if not self._groq:
+            logger.warning("GROQ_API_KEY not found")
+        if not self._nvidia:
+            logger.warning("NVIDIA_API_KEY not found")
+
+    def query(self, system: str, user: str, model: str = "fast", max_tokens: int = 4096) -> str:
         self._total_calls += 1
 
         try:
-            response = self._client.messages.create(
-                model=resolved_model,
-                max_tokens=max_tokens,
-                system=[
-                    {
-                        "type": "text",
-                        "text": system,
-                        "cache_control": _CACHE_CONTROL,
-                    }
-                ],
-                messages=[{"role": "user", "content": user}],
-            )
-        except anthropic.APIError as exc:
-            logger.error("[llm] API error: %s", exc)
+            if model == "fast":
+                if not self._groq:
+                    raise Exception("GROQ_API_KEY not configured")
+                response = self._groq.chat.completions.create(
+                    model=MODEL_FAST,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                    temperature=0.2,
+                    max_tokens=max_tokens,
+                )
+            else:
+                if not self._nvidia:
+                    raise Exception("NVIDIA_API_KEY not configured")
+                response = self._nvidia.chat.completions.create(
+                    model=MODEL_STRONG,
+                    messages=[
+                        {"role": "system", "content": system},
+                        {"role": "user", "content": user},
+                    ],
+                    temperature=0.2,
+                    max_tokens=max_tokens,
+                )
+
+            return response.choices[0].message.content
+
+        except Exception as exc:
+            logger.error(f"[llm] API error: {exc}")
             raise
 
-        usage = response.usage
-        if hasattr(usage, "cache_read_input_tokens") and usage.cache_read_input_tokens:
-            self._cache_hits += 1
-            logger.debug(
-                "[llm] cache hit — read %d tokens from cache",
-                usage.cache_read_input_tokens,
-            )
-
-        text = response.content[0].text
-        logger.debug("[llm] response length: %d chars", len(text))
-        return text
-
-    def cache_stats(self) -> dict:
-        return {
-            "total_calls": self._total_calls,
-            "cache_hits": self._cache_hits,
-            "hit_rate": self._cache_hits / max(self._total_calls, 1),
-        }
+    def stats(self) -> dict:
+        return {"total_calls": self._total_calls}

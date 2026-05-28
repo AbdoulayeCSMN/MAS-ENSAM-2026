@@ -2,24 +2,33 @@
 
 from __future__ import annotations
 
+import sys
+import os
+
+# Ajoute le dossier src au chemin Python
+sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from langgraph.graph import END, StateGraph
 
-from orchestrator.agents.exploit_scorer import ExploitScorerAgent
-from orchestrator.agents.memory_safety import MemorySafetyAgent
-from orchestrator.agents.patcher import PatcherAgent
-from orchestrator.agents.report import ReportAgent
-from orchestrator.agents.scanner import ScannerAgent
-from orchestrator.agents.semantic import SemanticAnalystAgent
-from orchestrator.agents.triage import TriageAgent
-from orchestrator.agents.validator import ValidatorAgent
-from orchestrator.graph.router import (
+# Changement : enlever "orchestrator."
+from agents.exploit_scorer import ExploitScorerAgent
+from agents.memory_safety import MemorySafetyAgent
+from agents.patcher import PatcherAgent
+from agents.report import ReportAgent
+from agents.scanner import ScannerAgent
+from agents.semantic import SemanticAnalystAgent
+from agents.triage import TriageAgent
+from agents.validator import ValidatorAgent
+
+# Changement : enlever "orchestrator."
+from graph.router import (
     route_after_analysis,
     route_after_exploit_scorer,
     route_after_patcher,
     route_after_triage,
     route_after_validator,
 )
-from orchestrator.graph.state import AgentState
+from graph.state import AgentState
 
 
 def build_workflow() -> StateGraph:

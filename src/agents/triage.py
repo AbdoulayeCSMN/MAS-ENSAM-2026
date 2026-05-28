@@ -6,9 +6,9 @@ import hashlib
 import os
 from pathlib import Path
 
-from orchestrator.agents.base import BaseAgent
-from orchestrator.graph.state import AgentState, Language, ScanTarget
-from orchestrator.graph.router import MEMORY_UNSAFE_LANGUAGES
+from agents.base import BaseAgent
+from graph.state import AgentState, Language, ScanTarget
+from graph.router import MEMORY_UNSAFE_LANGUAGES
 
 EXTENSION_MAP: dict[str, Language] = {
     ".c": Language.C,

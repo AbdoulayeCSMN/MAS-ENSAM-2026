@@ -90,3 +90,51 @@ class AgentState:
     current_agent: str = "triage"
     iteration: int = 0
     max_patch_iterations: int = 3
+
+    def to_dict(self) -> dict:
+        """Convertit l'état en dictionnaire pour la sérialisation."""
+        return {
+            "targets": self.targets,
+            "repo_root": self.repo_root,
+            "scan_id": self.scan_id,
+            "detected_languages": [lang.value for lang in self.detected_languages],
+            "needs_memory_safety": self.needs_memory_safety,
+            "raw_findings": self.raw_findings,
+            "vulnerabilities": self.vulnerabilities,
+            "memory_safety_findings": self.memory_safety_findings,
+            "semantic_findings": self.semantic_findings,
+            "patches_pending": self.patches_pending,
+            "patches_validated": self.patches_validated,
+            "patches_rejected": self.patches_rejected,
+            "report": self.report,
+            "errors": self.errors,
+            "current_agent": self.current_agent,
+            "iteration": self.iteration,
+            "max_patch_iterations": self.max_patch_iterations,
+        }
+
+    @classmethod
+    def from_dict(cls, data: dict) -> AgentState:
+        """Crée un état à partir d'un dictionnaire."""
+        state = cls(
+            repo_root=data.get("repo_root", ""),
+            scan_id=data.get("scan_id", ""),
+            max_patch_iterations=data.get("max_patch_iterations", 3)
+        )
+        state.targets = data.get("targets", [])
+        state.detected_languages = set(
+            Language(lang) for lang in data.get("detected_languages", [])
+        )
+        state.needs_memory_safety = data.get("needs_memory_safety", False)
+        state.raw_findings = data.get("raw_findings", [])
+        state.vulnerabilities = data.get("vulnerabilities", [])
+        state.memory_safety_findings = data.get("memory_safety_findings", [])
+        state.semantic_findings = data.get("semantic_findings", [])
+        state.patches_pending = data.get("patches_pending", [])
+        state.patches_validated = data.get("patches_validated", [])
+        state.patches_rejected = data.get("patches_rejected", [])
+        state.report = data.get("report", {})
+        state.errors = data.get("errors", [])
+        state.current_agent = data.get("current_agent", "triage")
+        state.iteration = data.get("iteration", 0)
+        return state

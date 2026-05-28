@@ -7,8 +7,8 @@ import logging
 import subprocess
 from pathlib import Path
 
-from orchestrator.agents.base import BaseAgent
-from orchestrator.graph.state import AgentState, Severity, Vulnerability
+from agents.base import BaseAgent
+from graph.state import AgentState, Severity, Vulnerability
 
 logger = logging.getLogger(__name__)
 

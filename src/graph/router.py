@@ -1,6 +1,6 @@
 """Routing logic: decides which agent runs next based on state."""
 
-from orchestrator.graph.state import AgentState, Language
+from graph.state import AgentState, Language
 
 
 MEMORY_UNSAFE_LANGUAGES = {Language.C, Language.CPP, Language.RUST}

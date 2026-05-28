@@ -6,10 +6,10 @@ import json
 import logging
 import uuid
 
-from orchestrator.agents.base import BaseAgent
-from orchestrator.graph.state import AgentState, Severity, Vulnerability
-from orchestrator.llm.client import LLMClient
-from orchestrator.memory.persistent import PersistentMemory
+from agents.base import BaseAgent
+from graph.state import AgentState, Severity, Vulnerability
+from llm.client import LLMClient
+from memory.persistent import PersistentMemory
 
 logger = logging.getLogger(__name__)
 
@@ -56,6 +56,7 @@ class SemanticAnalystAgent(BaseAgent):
             raw = self._llm.query(
                 system=SYSTEM_PROMPT,
                 user=f"File: {target.path}\n\n```\n{context}\n```",
+                model="strong"
             )
 
             try:
