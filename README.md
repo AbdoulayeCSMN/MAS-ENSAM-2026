@@ -79,9 +79,65 @@ Notre système est constitué de plusieurs agents spécialisés, chacun posséda
   <br>
   <em>Figure 1 : Architecture multi-agent de SecureCodeAgent</em>
 </div>
+---
+Découvrez ci-joint l’architecture complète de notre projet avant de commencer à le lancer et à l’utiliser.
 
+# 🏗️ Architecture du projet MultiAgentSecurite
 
-
+MultiAgentSecurite/
+│
+├── run.py                      # Point d'entrée (optionnel)
+├── start.bat                   # Script démarrage Windows
+├── start.sh                    # Script démarrage Linux/Mac
+├── requirements.txt            # Dépendances Python
+├── .env                        # Variables d'environnement (clés API)
+├── .memory_cache.db            # Base SQLite (mémoire persistante)
+├── .scan_cache/               # Cache des scans
+│
+├── env_travail/               # Environnement virtuel
+│
+└── src/
+    │
+    ├── api.py                # API FastAPI (REST + MCP)
+    ├── mcp_server.py         # Serveur MCP
+    ├── github_client.py      # Client GitHub
+    │
+    ├── agents/               # 🤖 Agents IA
+    │   ├── base.py
+    │   ├── triage.py
+    │   ├── scanner.py
+    │   ├── memory_safety.py
+    │   ├── semantic.py
+    │   ├── exploit_scorer.py
+    │   ├── patcher.py
+    │   ├── validator.py
+    │   └── report.py
+    │
+    ├── graph/                # 🔀 Orchestrateur (workflow)
+    │   ├── state.py
+    │   ├── workflow.py
+    │   └── router.py
+    │
+    ├── memory/               # 🧠 Mémoire persistante
+    │   ├── persistent.py
+    │   └── sqlite_memory.py
+    │
+    ├── llm/                 # 🤖 Clients LLM
+    │   └── client.py
+    │
+    ├── tools/               # 🔧 Outils de sécurité
+    │   ├── semgrep_tool.py
+    │   ├── bandit_tool.py
+    │   ├── gosec_tool.py
+    │   ├── spotbugs_tool.py
+    │   └── phpcs_tool.py
+    │
+    ├── rules/
+    │   └── custom.yml       # Règles Semgrep personnalisées
+    │
+    └── static/
+        └── index.html       # Interface web minimale
+        
 ## Participants
 
 | Nom | Statut | Contributions |
