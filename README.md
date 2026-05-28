@@ -179,7 +179,7 @@ python -m venv env_travail
 env_travail\Scripts\activate
 ```
 
-👉 Ici on crée un environnement isolé pour éviter les conflits de dépendances avec d'autres projets Python.
+Ici on crée un environnement isolé pour éviter les conflits de dépendances avec d'autres projets Python.
 
 ✔ Quand tu vois `(env_travail)` dans le terminal → environnement activé.
 
@@ -191,15 +191,15 @@ env_travail\Scripts\activate
 pip install -r requirements.txt
 ```
 
-👉 Cette commande installe toutes les bibliothèques nécessaires au projet (FastAPI, outils IA, etc.).
+Cette commande installe toutes les bibliothèques nécessaires au projet (FastAPI, outils IA, etc.).
 
-⏳ Attends 1 à 2 minutes selon ta connexion.
+Attends 1 à 2 minutes selon ta connexion.
 
 ---
 
 ## **ÉTAPE 4 : Créer tes clés API**
 
-👉 Le projet utilise plusieurs modèles d’IA externes, donc il faut des clés API.
+Le projet utilise plusieurs modèles d’IA externes, donc il faut des clés API.
 
 ---
 
@@ -210,7 +210,7 @@ pip install -r requirements.txt
 - Va dans **API Keys**  
 - Génère une clé
 
-👉 Exemple de clé : `gsk_xxxxx`
+Exemple de clé : `gsk_xxxxx`
 
 ---
 
@@ -221,7 +221,7 @@ pip install -r requirements.txt
 - Va dans **API Keys**  
 - Génère une clé
 
-👉 Exemple : `nvapi-xxxxx`
+Exemple : `nvapi-xxxxx`
 
 ---
 
@@ -231,13 +231,13 @@ pip install -r requirements.txt
 - Clique sur **Generate new token**  
 - Coche `repo` + `security_events`
 
-👉 Ce token permet au système d’interagir avec GitHub si nécessaire.
+Ce token permet au système d’interagir avec GitHub si nécessaire.
 
 ---
 
 ## **ÉTAPE 5 : Créer le fichier `.env`**
 
-👉 Le fichier `.env` contient toutes les clés sensibles du projet.
+Le fichier `.env` contient toutes les clés sensibles du projet.
 
 Crée-le dans le dossier `src/` :
 
@@ -247,7 +247,7 @@ NVIDIA_API_KEY=nvapi_votre_clé_ici
 GITHUB_TOKEN=votre_token_ici
 ```
 
-⚠️ Important : ne jamais partager ce fichier publiquement.
+Important : ne jamais partager ce fichier publiquement.
 
 ---
 
@@ -257,7 +257,7 @@ GITHUB_TOKEN=votre_token_ici
 python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
 ```
 
-👉 Cette commande démarre l’API FastAPI du projet.
+Cette commande démarre l’API FastAPI du projet.
 
 ---
 
