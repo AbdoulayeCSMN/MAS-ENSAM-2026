@@ -83,7 +83,7 @@ Notre système est constitué de plusieurs agents spécialisés, chacun posséda
 Découvrez ci-joint l’architecture complète de notre projet avant de commencer à le lancer et à l’utiliser.
 
 # 🏗️ Architecture du projet MultiAgentSecurite
-
+'''test
 MultiAgentSecurite/
 │
 ├── run.py                      # Point d'entrée (optionnel)
@@ -136,7 +136,7 @@ MultiAgentSecurite/
     │   └── custom.yml       # Règles Semgrep personnalisées
     │
     └── static/
-        └── index.html       # Interface web minimale
+        └── index.html       # Interface web minimale'''
         
 ## Participants
 
