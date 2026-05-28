@@ -80,10 +80,11 @@ Notre système est constitué de plusieurs agents spécialisés, chacun posséda
   <em>Figure 1 : Architecture multi-agent de SecureCodeAgent</em>
 </div>
 ---
+#  **Architecture du projet MultiAgentSecurite**
+
 Découvrez ci-joint l’architecture complète de notre projet avant de commencer à le lancer et à l’utiliser.
 
-# 🏗️ Architecture du projet MultiAgentSecurite
-'''test
+```
 MultiAgentSecurite/
 │
 ├── run.py                      # Point d'entrée (optionnel)
@@ -92,17 +93,17 @@ MultiAgentSecurite/
 ├── requirements.txt            # Dépendances Python
 ├── .env                        # Variables d'environnement (clés API)
 ├── .memory_cache.db            # Base SQLite (mémoire persistante)
-├── .scan_cache/               # Cache des scans
+├── .scan_cache/                # Cache des scans
 │
-├── env_travail/               # Environnement virtuel
+├── env_travail/                # Environnement virtuel
 │
 └── src/
     │
-    ├── api.py                # API FastAPI (REST + MCP)
-    ├── mcp_server.py         # Serveur MCP
-    ├── github_client.py      # Client GitHub
+    ├── api.py                 # API FastAPI (REST + MCP)
+    ├── mcp_server.py          # Serveur MCP
+    ├── github_client.py       # Client GitHub
     │
-    ├── agents/               # 🤖 Agents IA
+    ├── agents/                #  Agents IA
     │   ├── base.py
     │   ├── triage.py
     │   ├── scanner.py
@@ -113,19 +114,19 @@ MultiAgentSecurite/
     │   ├── validator.py
     │   └── report.py
     │
-    ├── graph/                # 🔀 Orchestrateur (workflow)
+    ├── graph/                 #  Orchestrateur (workflow)
     │   ├── state.py
     │   ├── workflow.py
     │   └── router.py
     │
-    ├── memory/               # 🧠 Mémoire persistante
+    ├── memory/               #  Mémoire persistante
     │   ├── persistent.py
     │   └── sqlite_memory.py
     │
-    ├── llm/                 # 🤖 Clients LLM
+    ├── llm/                  # 🤖 Clients LLM
     │   └── client.py
     │
-    ├── tools/               # 🔧 Outils de sécurité
+    ├── tools/                # 🔧 Outils de sécurité
     │   ├── semgrep_tool.py
     │   ├── bandit_tool.py
     │   ├── gosec_tool.py
@@ -136,7 +137,8 @@ MultiAgentSecurite/
     │   └── custom.yml       # Règles Semgrep personnalisées
     │
     └── static/
-        └── index.html       # Interface web minimale'''
+        └── index.html       # Interface web minimale
+```
         
 ## Participants
 
