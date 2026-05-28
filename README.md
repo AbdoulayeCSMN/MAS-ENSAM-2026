@@ -151,8 +151,7 @@ MultiAgentSecurite/
 ```bash
 git clone https://github.com/hinimdoumorsia/MultiAgentSecurite.git
 ```
-
-👉 Cette commande permet de récupérer le projet depuis GitHub sur ta machine locale.
+ Cette commande permet de récupérer le projet depuis GitHub sur ta machine locale.
 
 Ensuite, place-toi dans un dossier de travail :
 
@@ -181,7 +180,7 @@ env_travail\Scripts\activate
 
 Ici on crée un environnement isolé pour éviter les conflits de dépendances avec d'autres projets Python.
 
-✔ Quand tu vois `(env_travail)` dans le terminal → environnement activé.
+Quand tu vois `(env_travail)` dans le terminal → environnement activé.
 
 ---
 
@@ -270,7 +269,7 @@ INFO: Uvicorn running on http://0.0.0.0:8000
 INFO: Application startup complete.
 ```
 
-👉 Cela signifie que ton système multi-agents est bien lancé et prêt à être utilisé.
+Cela signifie que ton système multi-agents est bien lancé et prêt à être utilisé.
 
 
 
