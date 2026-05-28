@@ -24,9 +24,9 @@ Les agents IA autonomes capables de comprendre, réviser et réparer du code en 
 
 L'intégration d’agents d’intelligence artificielle dans les pipelines de développement logiciel soulève aujourd’hui plusieurs questions fondamentales :
 
-* ❓ **Fiabilité** : comment garantir des corrections justes et pertinentes ?
-* ❓ **Sécurité** : comment éviter l’introduction de nouvelles vulnérabilités ?
-* ❓ **Alignement architectural** : comment maintenir la cohérence globale du système logiciel ?
+* **Fiabilité** : comment garantir des corrections justes et pertinentes ?
+* **Sécurité** : comment éviter l’introduction de nouvelles vulnérabilités ?
+* **Alignement architectural** : comment maintenir la cohérence globale du système logiciel ?
 
 Les agents IA actuels rencontrent encore des difficultés lorsqu’ils doivent traiter des bases de code larges, distribuées et complexes. Plusieurs études montrent également que certains systèmes automatisés peuvent introduire de nouvelles vulnérabilités lors des corrections, avec un taux pouvant atteindre **8.7 % des cas**.
 
