@@ -80,6 +80,8 @@ Notre système est constitué de plusieurs agents spécialisés, chacun posséda
   <em>Figure 1 : Architecture multi-agent de SecureCodeAgent</em>
 </div>
 ---
+
+
 #  **Architecture du projet MultiAgentSecurite**
 
 Découvrez ci-joint l’architecture complète de notre projet avant de commencer à le lancer et à l’utiliser.
