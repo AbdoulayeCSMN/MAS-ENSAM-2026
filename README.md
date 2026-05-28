@@ -125,10 +125,10 @@ MultiAgentSecurite/
     │   ├── persistent.py
     │   └── sqlite_memory.py
     │
-    ├── llm/                  # 🤖 Clients LLM
+    ├── llm/                  #  Clients LLM
     │   └── client.py
     │
-    ├── tools/                # 🔧 Outils de sécurité
+    ├── tools/                #  Outils de sécurité
     │   ├── semgrep_tool.py
     │   ├── bandit_tool.py
     │   ├── gosec_tool.py
