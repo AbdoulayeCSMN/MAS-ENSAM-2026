@@ -271,7 +271,148 @@ INFO: Application startup complete.
 
 Cela signifie que ton système multi-agents est bien lancé et prêt à être utilisé.
 
+# **Les différents endpoints du système**
 
+Les endpoints suivants sont exposés par notre API FastAPI afin de permettre l’interaction avec le système multi-agents.
+
+## Endpoints API
+
+### Informations generales
+
+| Methode | Endpoint | Description | Exemple reponse |
+|---------|----------|-------------|-----------------|
+| GET | `/` | Informations generales | `{"name": "Multi-Agent Security Scanner", "version": "2.0.0", "status": "operational", "memory_backend": "SQLite"}` |
+| GET | `/agents` | Liste des 8 agents | `[{"name": "triage", "description": "...", "status": "active"}]` |
+
+---
+
+### Scan local
+
+| Methode | Endpoint | Description | Body / Param | Reponse |
+|---------|----------|-------------|--------------|---------|
+| POST | `/scan/local` | Scanner un depot local | `{"repo_path": "C:/mon-projet", "max_iterations": 3}` | `{"scan_id": "xxx", "status": "started"}` |
+| GET | `/scan/local/{scan_id}` | Statut du scan | `scan_id` (path) | `{"status": "completed", "vulnerabilities_count": 4}` |
+| GET | `/scan/local/{scan_id}/vulnerabilities` | Liste des vulnerabilites | `scan_id` (path) | `{"total": 4, "vulnerabilities": [...]}` |
+
+---
+
+### Scan GitHub
+
+| Methode | Endpoint | Description | Body | Reponse |
+|---------|----------|-------------|------|---------|
+| POST | `/scan/github` | Scanner un depot GitHub distant | `{"repo_url": "https://github.com/user/repo", "branch": "main", "max_iterations": 3}` | `{"scan_id": "xxx", "status": "started"}` |
+| GET | `/scan/github/{scan_id}` | Statut du scan | `scan_id` (path) | `{"status": "completed", "vulnerabilities_count": 4}` |
+| GET | `/scan/github/{scan_id}/vulnerabilities` | Liste des vulnerabilites | `scan_id` (path) | `{"total": 4, "vulnerabilities": [...]}` |
+
+---
+
+### Utilisateurs
+
+| Methode | Endpoint | Description | Body | Reponse |
+|---------|----------|-------------|------|---------|
+| POST | `/user/register` | Creer un utilisateur | `{"user_id": "alice123", "username": "Alice"}` | `{"status": "success", "user": {...}}` |
+| POST | `/user/{user_id}/scan` | Scanner GitHub pour un user | `{"repo_url": "...", "branch": "main"}` | `{"scan_id": "xxx", "status": "started"}` |
+| POST | `/user/{user_id}/scan/local` | Scanner local pour un user | `{"repo_path": "C:/projet"}` | `{"scan_id": "xxx", "status": "started"}` |
+| GET | `/user/{user_id}/history` | Historique des scans | `user_id` (path) | `{"total_scans": 5, "history": [...]}` |
+| GET | `/user/{user_id}/projects` | Projets scannes | `user_id` (path) | `{"total_projects": 3, "projects": [...]}` |
+
+---
+
+### Memoire persistante
+
+| Methode | Endpoint | Description | Body | Reponse |
+|---------|----------|-------------|------|---------|
+| POST | `/memory/test` | Tester la memoire | `{"pattern": "...", "code_snippet": "...", "action": "store"}` | `{"status": "success", "action": "store"}` |
+| GET | `/memory/stats` | Statistiques memoire | — | `{"status": "enabled", "backend": "SQLite", "patterns_count": 5}` |
+
+---
+
+## Exemples d'utilisation
+
+### 1. Scanner un depot GitHub
+
+```bash
+curl -X POST "http://localhost:8000/scan/github" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repo_url": "https://github.com/hinimdoumorsia/tkimage_studio",
+    "branch": "main",
+    "max_iterations": 3
+  }'
+```
+
+Reponse :
+
+```json
+{
+  "scan_id": "f1180e4d",
+  "status": "started",
+  "repo_url": "https://github.com/hinimdoumorsia/tkimage_studio",
+  "message": "Scan started..."
+}
+```
+
+---
+
+### 2. Verifier le statut
+
+```bash
+curl -X GET "http://localhost:8000/scan/github/f1180e4d"
+```
+
+Reponse (en cours) :
+
+```json
+{
+  "scan_id": "f1180e4d",
+  "status": "running",
+  "repo_url": "https://github.com/hinimdoumorsia/tkimage_studio",
+  "started_at": "2026-05-28T20:19:32.513403"
+}
+```
+
+Reponse (termine) :
+
+```json
+{
+  "scan_id": "f1180e4d",
+  "status": "completed",
+  "repo_url": "https://github.com/hinimdoumorsia/tkimage_studio",
+  "vulnerabilities_count": 4,
+  "completed_at": "2026-05-28T20:19:39.153383"
+}
+```
+
+---
+
+### 3. Recuperer les vulnerabilites
+
+```bash
+curl -X GET "http://localhost:8000/scan/github/f1180e4d/vulnerabilities"
+```
+
+Reponse :
+
+```json
+{
+  "scan_id": "f1180e4d",
+  "repo_url": "https://github.com/hinimdoumorsia/tkimage_studio",
+  "total": 4,
+  "vulnerabilities": [
+    {
+      "id": "693f89b3-a013-4765-87be-dd5c5add7a1c",
+      "title": "Detected a dynamic value being used with urllib",
+      "severity": "medium",
+      "cwe_id": "CWE-939",
+      "file_path": "src/ui/right_panel.py",
+      "line_start": 227,
+      "description": "urllib supports 'file://' schemes, so a dynamic value controlled by a malicious actor may allow them to read arbitrary files.",
+      "cvss_score": 5,
+      "is_exploitable": false
+    }
+  ]
+}
+```
 
 
 ## Participants
