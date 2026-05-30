@@ -1,0 +1,39 @@
+[package]
+name = "memory-engine"
+version = "0.1.0"
+edition = "2021"
+description = "Static memory safety analyzer for C, C++ and Rust source code"
+authors = ["Aboulaye CSMN"]
+
+[[bin]]
+name = "memory-engine"
+path = "src/main.rs"
+
+[dependencies]
+# Serialization
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# UUID generation
+uuid = { version = "1.0", features = ["v4"] }
+
+# CLI argument parsing
+clap = { version = "4.0", features = ["derive"] }
+
+# Regex for pattern matching
+regex = "1.10"
+
+# Lazy static for compiled regexes
+once_cell = "1.19"
+
+# Walkdir for recursive directory traversal
+walkdir = "2.4"
+
+# Colored output (stderr only)
+colored = "2.1"
+
+[profile.release]
+opt-level = 3
+lto = true
+codegen-units = 1
+strip = true

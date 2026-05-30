@@ -1,0 +1,232 @@
+---
+title: Architecture
+description: Vue technique complète du système — blocs, responsabilités et flux de données.
+---
+
+## Diagramme d'architecture globale
+
+```mermaid
+graph TB
+    subgraph CLIENTS["Clients externes"]
+        HTTP["HTTP REST"]
+        MCP["MCP JSON-RPC 2.0"]
+    end
+
+    subgraph API["FastAPI  ·  src/api.py"]
+        EP["20+ Endpoints"]
+        BG["Background Tasks"]
+        DB[("SQLite\n.memory_cache.db")]
+    end
+
+    subgraph GRAPH["LangGraph Workflow  ·  src/graph/"]
+        STATE["AgentState\n(état partagé)"]
+        ROUTE["Routage\nconditionnel"]
+    end
+
+    subgraph AGENTS["8 Agents  ·  src/agents/"]
+        TRI["1 · Triage"]
+        SCN["2 · Scanner"]
+        MEM["3 · MemorySafety"]
+        SEM["4 · Semantic"]
+        EXP["5 · ExploitScorer"]
+        PAT["6 · Patcher"]
+        VAL["7 · Validator"]
+        REP["8 · Report"]
+    end
+
+    subgraph TOOLS["Outils sécurité  ·  src/tools/"]
+        SG["Semgrep"]
+        BA["Bandit"]
+        GS["Gosec"]
+        SP["SpotBugs"]
+        PH["PHPCS"]
+    end
+
+    subgraph LLM["LLM Client  ·  src/llm/client.py"]
+        GROQ["Groq\nLlama-3.1-8B\nfast"]
+        NVID["NVIDIA\nLlama-3.1-70B\nstrong"]
+    end
+
+    subgraph MEM2["Mémoire  ·  src/memory/"]
+        QD[("Qdrant\nvuln_patterns\npatches")]
+        SQ[("SQLite\nusers · scans")]
+    end
+
+    HTTP & MCP --> API
+    API --> GRAPH
+    GRAPH --> AGENTS
+    SCN --> TOOLS
+    SEM & EXP & PAT --> LLM
+    SEM & PAT & VAL --> QD
+    API --> SQ
+
+    style CLIENTS fill:#1e293b,stroke:#475569,color:#e2e8f0
+    style API fill:#0f3d2e,stroke:#0D9373,color:#e2e8f0
+    style GRAPH fill:#1e1b4b,stroke:#6d28d9,color:#e2e8f0
+    style AGENTS fill:#1c1917,stroke:#a16207,color:#e2e8f0
+    style TOOLS fill:#0c1a2e,stroke:#1d4ed8,color:#e2e8f0
+    style LLM fill:#1a1a2e,stroke:#7c3aed,color:#e2e8f0
+    style MEM2 fill:#0f172a,stroke:#475569,color:#e2e8f0
+```
+
+---
+
+## Blocs principaux
+
+<CardGroup cols={2}>
+  <Card title="FastAPI" icon="server">
+    Point d'entrée HTTP. Orchestre les scans en arrière-plan, persiste les utilisateurs et historiques dans SQLite, expose 20+ endpoints REST.
+  </Card>
+  <Card title="LangGraph" icon="diagram-project">
+    Graphe d'exécution des agents. Gère le routage conditionnel, la parallélisation et les boucles de retry de patching.
+  </Card>
+  <Card title="8 Agents" icon="robot">
+    Pipeline Triage → Scanner → (MemorySafety ∥ Semantic) → ExploitScorer → Patcher → Validator → Report.
+  </Card>
+  <Card title="Outils sécurité" icon="shield-check">
+    Semgrep (multi-langage), Bandit (Python), Gosec (Go), SpotBugs (Java), PHPCS (PHP) lancés en parallèle.
+  </Card>
+  <Card title="LLM Client" icon="microchip">
+    Deux modèles : 8B pour les tâches rapides (scoring), 70B pour les tâches profondes (analyse sémantique, patching).
+  </Card>
+  <Card title="Mémoire" icon="database">
+    Qdrant pour les patterns de vulnérabilités et patches validés. SQLite pour les utilisateurs, projets et historique.
+  </Card>
+  <Card title="GitHub Client" icon="code-branch">
+    Clone les dépôts (depth=1), liste les branches, nettoie les répertoires temporaires après scan.
+  </Card>
+  <Card title="MCP Server" icon="plug">
+    Interface JSON-RPC 2.0 alternative à l'API REST, compatible clients MCP et assistants IA.
+  </Card>
+</CardGroup>
+
+---
+
+## Flux de données global
+
+```mermaid
+sequenceDiagram
+    actor U as Utilisateur
+    participant A as FastAPI
+    participant W as LangGraph
+    participant TR as TriageAgent
+    participant SC as ScannerAgent
+    participant MS as MemorySafetyAgent
+    participant SA as SemanticAnalystAgent
+    participant ES as ExploitScorerAgent
+    participant PA as PatcherAgent
+    participant VA as ValidatorAgent
+    participant RE as ReportAgent
+
+    U->>A: POST /scan/local {repo_path}
+    A-->>U: 202 {scan_id}
+    A->>W: build_workflow().invoke(AgentState)
+
+    W->>TR: run(state)
+    TR-->>W: targets + languages
+
+    W->>SC: run(state)
+    SC-->>W: vulnerabilities
+
+    par Parallèle
+        W->>MS: run(state)
+        MS-->>W: memory_safety_findings
+    and
+        W->>SA: run(state)
+        SA-->>W: semantic_findings
+    end
+
+    W->>ES: run(state)
+    ES-->>W: cvss_scores + patches_pending
+
+    loop max 3 itérations
+        W->>PA: run(state)
+        PA-->>W: patch_diffs
+        W->>VA: run(state)
+        VA-->>W: validated / rejected
+    end
+
+    W->>RE: run(state)
+    RE-->>W: report JSON
+
+    W-->>A: state final
+    U->>A: GET /scan/local/{scan_id}
+    A-->>U: {status: completed, report: {...}}
+```
+
+---
+
+## Flux de données — état partagé
+
+```mermaid
+flowchart LR
+    subgraph IN["Entrées"]
+        R[repo_root]
+        S[scan_id]
+        M[max_iterations]
+    end
+
+    subgraph STATE["AgentState"]
+        T[targets]
+        L[detected_languages]
+        V[vulnerabilities]
+        MS[memory_safety_findings]
+        SE[semantic_findings]
+        PP[patches_pending]
+        PV[patches_validated]
+        PR[patches_rejected]
+        RP[report]
+        ER[errors]
+    end
+
+    IN --> T
+    T --> L
+    T --> V
+    V --> MS
+    V --> SE
+    MS & SE --> PP
+    PP --> PV & PR
+    PV & PR --> RP
+```
+
+---
+
+## Parallélisation
+
+| Étape | Agents | Mode |
+|-------|--------|------|
+| Scan outils | Semgrep + Bandit + Gosec + SpotBugs + PHPCS | 4 workers ThreadPool |
+| Enrichissement | MemorySafetyAgent + SemanticAnalystAgent | Parallel LangGraph |
+| Patching/Validation | PatcherAgent + ValidatorAgent | Séquentiel + retry loop |
+
+---
+
+## Cache
+
+```mermaid
+flowchart LR
+    A[Nouveau scan] --> B{Hash repo +\nversion Semgrep +\nhash custom.yml\n= clé cache ?}
+    B -->|Cache valide\n< 1 heure| C[Retour résultats\ncachés]
+    B -->|Cache manquant\nou expiré| D[Lancer outils\nSemgrep + co.]
+    D --> E[Stocker dans\n.scan_cache/]
+    E --> C
+    F[SCAN_FORCE_REFRESH=true] --> D
+```
+
+**Répertoire :** `src/.scan_cache/` · **TTL :** 1 heure
+
+---
+
+## Points d'attention
+
+<Warning>
+  Le moteur de sécurité mémoire (`MemorySafetyAgent`) nécessite un binaire Rust externe compilé séparément. Sans lui, l'agent est ignoré silencieusement.
+</Warning>
+
+<Info>
+  Qdrant est **optionnel**. Si le service n'est pas disponible, `SemanticAnalystAgent` et `PatcherAgent` fonctionnent sans RAG — la qualité de l'analyse diminue légèrement mais aucune erreur fatale n'est levée.
+</Info>
+
+<Tip>
+  Sur un dépôt volumineux, le premier scan peut prendre 2–5 minutes. Les scans suivants (mêmes fichiers) exploitent le cache et s'exécutent en quelques secondes.
+</Tip>

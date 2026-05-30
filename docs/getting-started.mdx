@@ -1,0 +1,227 @@
+---
+title: Démarrage rapide
+description: Installer, configurer et lancer le scanner en moins de 5 minutes.
+---
+
+## Prérequis
+
+<CardGroup cols={2}>
+  <Card title="Python 3.9+" icon="python">
+    Python 3.11+ recommandé pour les meilleures performances.
+  </Card>
+  <Card title="Clés API LLM" icon="key">
+    Au moins `GROQ_API_KEY` ou `NVIDIA_API_KEY` est requise.
+  </Card>
+  <Card title="Semgrep" icon="shield">
+    Installé automatiquement via `requirements.txt` (pip).
+  </Card>
+  <Card title="Git" icon="code-branch">
+    Nécessaire pour cloner des dépôts GitHub.
+  </Card>
+</CardGroup>
+
+---
+
+## Installation
+
+<Steps>
+  <Step title="Cloner le dépôt">
+    ```bash
+    git clone https://github.com/votre-org/mas-ensam-2026.git
+    cd mas-ensam-2026
+    ```
+  </Step>
+  <Step title="Créer un environnement virtuel">
+    ```bash
+    python -m venv .venv
+    # Windows
+    .venv\Scripts\activate
+    # Linux / macOS
+    source .venv/bin/activate
+    ```
+  </Step>
+  <Step title="Installer les dépendances">
+    ```bash
+    pip install -r requirements.txt
+    ```
+    <Note>
+      L'installation inclut Semgrep, Bandit, LangGraph, FastAPI et les clients LLM. Comptez 2–3 minutes selon votre connexion.
+    </Note>
+  </Step>
+  <Step title="Configurer les variables d'environnement">
+    Créez un fichier `.env` **dans le dossier `src/`** :
+    ```env
+    # Obligatoire — au moins un des deux
+    GROQ_API_KEY=gsk_xxxxxxxxxxxxxxxxxxxxxxxx
+    NVIDIA_API_KEY=nvapi_xxxxxxxxxxxxxxxxxxxxxxxx
+
+    # Optionnel — cloner des dépôts privés GitHub
+    GITHUB_TOKEN=ghp_xxxxxxxxxxxxxxxxxxxxxxxx
+
+    # Optionnel — mémoire sémantique Qdrant
+    QDRANT_HOST=localhost
+    QDRANT_PORT=6333
+    ```
+    <Warning>
+      Ne commitez jamais le fichier `.env`. Il est déjà listé dans `.gitignore`.
+    </Warning>
+  </Step>
+  <Step title="Lancer l'API">
+    ```bash
+    python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000)"
+    ```
+    L'API démarre sur `http://localhost:8000`.
+  </Step>
+</Steps>
+
+---
+
+## Vérification du démarrage
+
+```bash
+curl http://localhost:8000
+```
+
+Réponse attendue :
+
+```json
+{
+  "service": "Multi-Agent Security Scanner",
+  "version": "1.0.0",
+  "status": "running",
+  "agents": 8
+}
+```
+
+L'interface Swagger interactive est disponible sur :
+
+```
+http://localhost:8000/docs
+```
+
+L'interface de démonstration est disponible sur :
+
+```
+http://localhost:8000/ui
+```
+
+---
+
+## Premier scan
+
+### Scan d'un dépôt local
+
+```bash
+curl -X POST http://localhost:8000/scan/local \
+  -H "Content-Type: application/json" \
+  -d '{"repo_path": "/chemin/vers/votre/projet", "max_iterations": 3}'
+```
+
+Réponse :
+
+```json
+{
+  "scan_id": "abc123",
+  "status": "started",
+  "message": "Scan lancé en arrière-plan"
+}
+```
+
+### Récupérer les résultats
+
+```bash
+# Statut du scan
+curl http://localhost:8000/scan/local/abc123
+
+# Vulnérabilités détectées
+curl http://localhost:8000/scan/local/abc123/vulnerabilities
+```
+
+### Scan d'un dépôt GitHub public
+
+```bash
+curl -X POST http://localhost:8000/scan/github \
+  -H "Content-Type: application/json" \
+  -d '{
+    "repo_url": "https://github.com/user/repo",
+    "branch": "main",
+    "max_iterations": 3,
+    "cleanup_after": true
+  }'
+```
+
+---
+
+## Configuration Qdrant (optionnelle)
+
+Si vous souhaitez activer la mémoire sémantique (patterns de vulnérabilités + patches réutilisables) :
+
+```bash
+# Lancer Qdrant via Docker
+docker run -p 6333:6333 qdrant/qdrant
+```
+
+Puis ajoutez dans `src/.env` :
+
+```env
+QDRANT_HOST=localhost
+QDRANT_PORT=6333
+```
+
+<Info>
+  Sans Qdrant, le scanner fonctionne en mode dégradé : l'analyse statique et les agents LLM restent opérationnels, mais sans réutilisation de patterns passés.
+</Info>
+
+---
+
+## Variables d'environnement complètes
+
+| Variable | Obligatoire | Description |
+|----------|-------------|-------------|
+| `GROQ_API_KEY` | Oui* | Clé Groq (Llama-3.1-8B) |
+| `NVIDIA_API_KEY` | Oui* | Clé NVIDIA (Llama-3.1-70B) |
+| `GITHUB_TOKEN` | Non | Token GitHub (dépôts privés) |
+| `QDRANT_HOST` | Non | Hôte Qdrant (défaut: localhost) |
+| `QDRANT_PORT` | Non | Port Qdrant (défaut: 6333) |
+| `SCAN_FORCE_REFRESH` | Non | Forcer bypass cache (défaut: false) |
+
+*Au moins une clé LLM est requise.
+
+---
+
+## Outils externes optionnels
+
+Certains agents de scan nécessitent des binaires installés séparément :
+
+<AccordionGroup>
+  <Accordion title="Gosec — analyse Go">
+    ```bash
+    go install github.com/securego/gosec/v2/cmd/gosec@latest
+    ```
+  </Accordion>
+  <Accordion title="SpotBugs — analyse Java">
+    Téléchargez SpotBugs depuis [spotbugs.github.io](https://spotbugs.github.io/) et assurez-vous que `spotbugs` est dans votre `PATH`.
+  </Accordion>
+  <Accordion title="PHPCS — analyse PHP">
+    ```bash
+    composer global require squizlabs/php_codesniffer
+    ```
+  </Accordion>
+  <Accordion title="Memory Safety Engine — analyse C/C++/Rust">
+    Le code source Rust est inclus dans le dépôt sous `memory-engine/`.
+
+    **Prérequis :** [Rust toolchain](https://rustup.rs/) installé.
+
+    ```bash
+    # Linux / macOS
+    cd memory-engine
+    cargo build --release
+
+    # Windows (PowerShell)
+    cd memory-engine
+    .\build.ps1
+    ```
+
+    Le binaire est automatiquement détecté par `MemorySafetyAgent` dans `memory-engine/target/release/`.
+  </Accordion>
+</AccordionGroup>

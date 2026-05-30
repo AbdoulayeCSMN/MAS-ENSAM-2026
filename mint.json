@@ -1,0 +1,87 @@
+{
+  "$schema": "https://mintlify.com/schema.json",
+  "name": "Multi-Agent Security",
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373",
+    "anchors": {
+      "from": "#0D9373",
+      "to": "#07C983"
+    }
+  },
+  "topbarLinks": [
+    {
+      "name": "GitHub",
+      "url": "https://github.com/votre-org/mas-ensam-2026"
+    }
+  ],
+  "topbarCtaButton": {
+    "name": "Swagger UI",
+    "url": "http://localhost:8000/docs"
+  },
+  "tabs": [
+    {
+      "name": "API Reference",
+      "url": "api-reference"
+    }
+  ],
+  "anchors": [
+    {
+      "name": "Architecture",
+      "icon": "sitemap",
+      "url": "docs/architecture"
+    },
+    {
+      "name": "Agents",
+      "icon": "robot",
+      "url": "docs/agents"
+    }
+  ],
+  "navigation": [
+    {
+      "group": "Introduction",
+      "pages": [
+        "docs/index",
+        "docs/getting-started"
+      ]
+    },
+    {
+      "group": "Architecture",
+      "pages": [
+        "docs/architecture",
+        "docs/workflow",
+        "docs/models"
+      ]
+    },
+    {
+      "group": "Agents",
+      "pages": [
+        "docs/agents",
+        "docs/llm"
+      ]
+    },
+    {
+      "group": "Outils & Mémoire",
+      "pages": [
+        "docs/tools",
+        "docs/memory"
+      ]
+    },
+    {
+      "group": "Intégrations",
+      "pages": [
+        "docs/api",
+        "docs/mcp"
+      ]
+    }
+  ],
+  "footerSocials": {
+    "github": "https://github.com/AbdoulayeCSMN/MAS-ENSAM-2026.git"
+  }
+}

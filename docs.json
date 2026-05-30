@@ -1,0 +1,71 @@
+{
+  "$schema": "https://mintlify.com/docs.json",
+  "theme": "mint",
+  "name": "Multi-Agent Security",
+  "colors": {
+    "primary": "#0D9373",
+    "light": "#07C983",
+    "dark": "#0D9373"
+  },
+  "logo": {
+    "light": "/logo/light.svg",
+    "dark": "/logo/dark.svg"
+  },
+  "favicon": "/favicon.svg",
+  "layout": "topnav",
+  "sidebar": {
+    "items": "border"
+  },
+  "background": {
+    "style": "grid"
+  },
+  "custom": {
+    "css": ["/styles/custom.css"]
+  },
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Introduction",
+            "pages": [
+              "docs/index",
+              "docs/getting-started",
+              "docs/ui"
+            ]
+          },
+          {
+            "group": "Architecture",
+            "pages": [
+              "docs/architecture",
+              "docs/workflow",
+              "docs/models"
+            ]
+          },
+          {
+            "group": "Agents",
+            "pages": [
+              "docs/agents",
+              "docs/llm"
+            ]
+          },
+          {
+            "group": "Outils & Mémoire",
+            "pages": [
+              "docs/tools",
+              "docs/memory"
+            ]
+          },
+          {
+            "group": "Intégrations",
+            "pages": [
+              "docs/api",
+              "docs/mcp"
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

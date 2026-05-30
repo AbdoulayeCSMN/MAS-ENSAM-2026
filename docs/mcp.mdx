@@ -1,0 +1,239 @@
+---
+title: Serveur MCP
+description: Interface Model Context Protocol JSON-RPC 2.0 — outils exposés et mode d'emploi.
+---
+
+## Vue d'ensemble
+
+**Fichier :** `src/mcp_server.py`
+
+Le serveur MCP (Model Context Protocol) fournit une interface alternative à l'API REST. Il est utile pour connecter le scanner à un assistant IA ou un IDE compatible MCP (Cursor, Zed, Claude Desktop…).
+
+<CardGroup cols={2}>
+  <Card title="Protocol" icon="plug">
+    JSON-RPC 2.0 sur stdio ou HTTP
+  </Card>
+  <Card title="Spec" icon="book">
+    Compatible Model Context Protocol v1.0
+  </Card>
+</CardGroup>
+
+---
+
+## Démarrage
+
+```bash
+python src/mcp_server.py
+```
+
+Le serveur écoute sur stdio par défaut, compatible avec les clients MCP standard.
+
+---
+
+## Méthodes JSON-RPC exposées
+
+### `initialize`
+
+Handshake initial avec le client MCP.
+
+```json
+// Requête
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "initialize",
+  "params": {
+    "protocolVersion": "1.0",
+    "clientInfo": {"name": "my-client", "version": "1.0"}
+  }
+}
+
+// Réponse
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "protocolVersion": "1.0",
+    "serverInfo": {"name": "MAS Security Scanner", "version": "1.0"},
+    "capabilities": {"tools": {}}
+  }
+}
+```
+
+---
+
+### `tools/list`
+
+Lister tous les outils disponibles.
+
+```json
+// Requête
+{"jsonrpc": "2.0", "id": 2, "method": "tools/list"}
+
+// Réponse
+{
+  "result": {
+    "tools": [
+      {"name": "scan_repository",      "description": "..."},
+      {"name": "analyze_code",         "description": "..."},
+      {"name": "generate_patch",       "description": "..."},
+      ...
+    ]
+  }
+}
+```
+
+---
+
+### `tools/call`
+
+Appeler un outil.
+
+```json
+// Requête
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "method": "tools/call",
+  "params": {
+    "name": "scan_repository",
+    "arguments": {
+      "repo_path": "/path/to/repo",
+      "max_iterations": 3
+    }
+  }
+}
+```
+
+---
+
+### `resources/list`
+
+Lister les ressources disponibles (rapports de scans précédents, stats mémoire).
+
+---
+
+## Outils disponibles
+
+<AccordionGroup>
+  <Accordion title="scan_repository">
+    Lance le pipeline complet sur un dépôt local.
+
+    **Paramètres :**
+    - `repo_path` (string) — chemin absolu
+    - `max_iterations` (int, défaut: 3) — retries patch
+
+    **Retourne :** Rapport JSON complet (voir [Modèles → Structure du rapport](/docs/models))
+  </Accordion>
+
+  <Accordion title="analyze_code">
+    Analyse un snippet de code pour détecter des vulnérabilités via SemanticAnalystAgent.
+
+    **Paramètres :**
+    - `code` (string) — code source à analyser
+    - `language` (string) — "python" | "javascript" | "go" | ...
+
+    **Retourne :** `list[Vulnerability]`
+  </Accordion>
+
+  <Accordion title="generate_patch">
+    Génère un patch pour une vulnérabilité donnée via PatcherAgent.
+
+    **Paramètres :**
+    - `vulnerability_id` (string) — UUID d'une vulnérabilité connue
+    - `file_content` (string) — contenu complet du fichier
+
+    **Retourne :** Unified diff ou erreur
+  </Accordion>
+
+  <Accordion title="enrich_finding">
+    Enrichit un finding existant avec des métadonnées supplémentaires (CVE, CVSS, références).
+
+    **Paramètres :**
+    - `vulnerability` (object) — objet Vulnerability sérialisé
+  </Accordion>
+
+  <Accordion title="query_memory">
+    Interroge Qdrant pour retrouver des patterns ou patches similaires.
+
+    **Paramètres :**
+    - `query` (string) — description ou snippet de code
+    - `type` (string) — "patterns" | "patches"
+    - `cwe_id` (string, optionnel) — filtre par CWE
+  </Accordion>
+
+  <Accordion title="store_pattern">
+    Stocke un nouveau pattern de vulnérabilité dans Qdrant.
+
+    **Paramètres :**
+    - `description` (string)
+    - `code_snippet` (string)
+    - `cwe_id` (string)
+  </Accordion>
+
+  <Accordion title="get_agent_status">
+    Retourne le statut de l'agent en cours d'exécution (si un scan tourne).
+  </Accordion>
+
+  <Accordion title="get_agent_capabilities">
+    Retourne les capacités de chaque agent (langages supportés, type d'analyse).
+  </Accordion>
+
+  <Accordion title="explain_vulnerability">
+    Explique une vulnérabilité en langage naturel via LLM.
+
+    **Paramètres :**
+    - `vulnerability_id` (string)
+    - `audience` (string) — "developer" | "manager" | "security"
+  </Accordion>
+</AccordionGroup>
+
+---
+
+## Intégration avec Claude Desktop
+
+Ajoutez dans votre `claude_desktop_config.json` :
+
+```json
+{
+  "mcpServers": {
+    "security-scanner": {
+      "command": "python",
+      "args": ["/chemin/vers/mas-ensam-2026/src/mcp_server.py"],
+      "env": {
+        "GROQ_API_KEY": "gsk_...",
+        "NVIDIA_API_KEY": "nvapi_..."
+      }
+    }
+  }
+}
+```
+
+Après redémarrage, Claude Desktop peut appeler les outils directement depuis une conversation.
+
+---
+
+## Intégration avec Cursor / VS Code
+
+Ajoutez dans votre configuration MCP de l'IDE :
+
+```json
+{
+  "name": "MAS Security Scanner",
+  "transport": "stdio",
+  "command": "python src/mcp_server.py"
+}
+```
+
+---
+
+## Différences API REST vs MCP
+
+| Critère | API REST | MCP |
+|---------|---------|-----|
+| Protocol | HTTP/JSON | JSON-RPC 2.0 / stdio |
+| Authentification | Aucune (localhost) | Aucune |
+| Clients cibles | Applications web, CLI, CI/CD | Assistants IA, IDEs |
+| Scans asynchrones | Oui (background tasks) | Selon implémentation |
+| Historique utilisateurs | Oui (SQLite) | Non |
+| Usage recommandé | Intégration backend | Intégration IA / IDE |

@@ -1,4 +1,4 @@
-"""FastAPI server for Multi-Agent Security Scanner - REST API only."""
+"""FastAPI server for Multi-Agent Security Scanner."""
 
 from __future__ import annotations
 
@@ -13,6 +13,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field
 import uvicorn
 
@@ -207,9 +209,22 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Serve demo UI static files
+_STATIC_DIR = Path(__file__).parent / "static"
+if _STATIC_DIR.exists():
+    app.mount("/static", StaticFiles(directory=str(_STATIC_DIR)), name="static")
+
 # ============================================
 # ENDPOINTS DE BASE
 # ============================================
+
+@app.get("/ui", include_in_schema=False)
+async def demo_ui():
+    """Interface utilisateur de démonstration."""
+    index = _STATIC_DIR / "index.html"
+    if not index.exists():
+        raise HTTPException(status_code=404, detail="UI not found")
+    return FileResponse(str(index))
 
 @app.get("/")
 async def root():
