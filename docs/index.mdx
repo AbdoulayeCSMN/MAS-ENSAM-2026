@@ -1,0 +1,95 @@
+---
+title: Vue d'ensemble
+description: Multi-Agent Security Scanner — plateforme d'analyse sécurité orchestrée par 8 agents IA spécialisés.
+---
+
+# Multi-Agent Security Scanner
+
+**MAS** est une plateforme d'analyse de sécurité de code source pilotée par des agents IA. Elle combine analyse statique multi-outils, raisonnement LLM, génération automatique de correctifs et mémoire persistante.
+
+<CardGroup cols={2}>
+  <Card title="Démarrage rapide" icon="rocket" href="/docs/getting-started">
+    Installation, configuration des clés API et premier scan en 5 minutes.
+  </Card>
+  <Card title="Architecture" icon="sitemap" href="/docs/architecture">
+    Vue technique complète : FastAPI, LangGraph, 8 agents, mémoire Qdrant/SQLite.
+  </Card>
+  <Card title="Interface démo" icon="display" href="/docs/ui">
+    Interface web intégrée — pipeline animé, résultats et patches en temps réel.
+  </Card>
+  <Card title="Référence API" icon="code" href="/docs/api">
+    Tous les endpoints REST avec schémas de requête et réponse.
+  </Card>
+  <Card title="Les 8 Agents" icon="robot" href="/docs/agents">
+    Rôle, entrées, sorties et comportement de chaque agent du pipeline.
+  </Card>
+</CardGroup>
+
+---
+
+## Ce que le projet fait
+
+<Steps>
+  <Step title="Triage">
+    Détection automatique des langages (Python, JS, C/C++, Go, Java, PHP, Rust…) et construction des cibles de scan.
+  </Step>
+  <Step title="Analyse statique">
+    Lancement parallèle de **Semgrep**, **Bandit**, **Gosec**, **SpotBugs** et **PHPCS** avec cache intelligent.
+  </Step>
+  <Step title="Analyse LLM">
+    Détection des failles logiques (auth bypass, IDOR, race conditions) via un LLM 70B augmenté de RAG Qdrant.
+  </Step>
+  <Step title="Scoring CVSS">
+    Chaque vulnérabilité reçoit un score CVSS 3.1 et un booléen d'exploitabilité calculés par LLM.
+  </Step>
+  <Step title="Patching automatique">
+    Génération de diffs unifiés pour toutes les vulnérabilités exploitables (CVSS ≥ 7.0).
+  </Step>
+  <Step title="Validation">
+    Application du patch, re-scan Semgrep, détection de régressions. Retry automatique (max 3 itérations).
+  </Step>
+  <Step title="Rapport">
+    Rapport JSON structuré avec statistiques, top CWEs, détail des vulnérabilités et état des patches.
+  </Step>
+</Steps>
+
+---
+
+## Stack technique
+
+<CardGroup cols={3}>
+  <Card title="FastAPI 0.136" icon="bolt">
+    API REST asynchrone avec background tasks.
+  </Card>
+  <Card title="LangGraph 1.2" icon="diagram-project">
+    Orchestration conditionnelle du pipeline d'agents.
+  </Card>
+  <Card title="Groq + NVIDIA" icon="microchip">
+    Llama-3.1-8B (rapide) et 70B (fort) pour les agents IA.
+  </Card>
+  <Card title="Semgrep 1.163" icon="magnifying-glass">
+    Analyse statique multi-langage avec règles OWASP Top 10.
+  </Card>
+  <Card title="Qdrant 1.18" icon="database">
+    Vector store pour patterns de vulnérabilités et patches validés.
+  </Card>
+  <Card title="SQLite" icon="table">
+    Persistance utilisateurs, projets et historique des scans.
+  </Card>
+</CardGroup>
+
+---
+
+## Fichiers clés
+
+| Fichier | Rôle |
+|---------|------|
+| `src/api.py` | Application FastAPI — 20+ endpoints, lifespan, background tasks |
+| `src/graph/workflow.py` | Construction du graphe LangGraph |
+| `src/graph/state.py` | `AgentState`, `Vulnerability`, `ScanTarget`, enums |
+| `src/agents/*.py` | 8 agents spécialisés |
+| `src/tools/*.py` | Wrappers Semgrep, Bandit, Gosec, SpotBugs, PHPCS |
+| `src/memory/persistent.py` | Qdrant + Sentence Transformers |
+| `src/llm/client.py` | Clients Groq et NVIDIA |
+| `src/github_client.py` | Clone, gestion et nettoyage de dépôts GitHub |
+| `src/mcp_server.py` | Serveur MCP JSON-RPC 2.0 |

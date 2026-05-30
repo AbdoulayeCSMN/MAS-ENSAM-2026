@@ -1,21 +1,71 @@
-```gitignore id="adnngv"
-# Environnement virtuel
+# ── Rust / memory-engine ──────────────────────────────
+memory-engine/target/        # artefacts de compilation
+memory-engine/Cargo.lock     # lockfile binaire
+
+# bins/ est versionné — contient les binaires pré-compilés pour chaque OS
+# memory-engine/bins/   ← NE PAS ignorer
+
+# ── Python ────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.so
+
+# ── Environnements virtuels ───────────────────────────
 env_travail/
 venv/
 env/
+.venv/
+.env/
 
-# Python cache
-__pycache__/
-*.pyc
-
-# Variables sensibles
+# ── Variables sensibles ───────────────────────────────
 .env
 src/.env
+*.env.local
+*.env.*.local
+secrets.json
 
-# Cache
+# ── Cache scanner ─────────────────────────────────────
+src/.scan_cache/
 .scan_cache/
-.memory_cache.db
 
-# Backup
+# ── Base de données locale ────────────────────────────
+.memory_cache.db
+*.db
+*.sqlite
+*.sqlite3
+
+# ── Logs ──────────────────────────────────────────────
+*.log
+logs/
+
+# ── Dépôts GitHub clonés temporairement ───────────────
+/tmp/github_scans_*/
+
+# ── Qdrant storage local ──────────────────────────────
+qdrant_storage/
+
+# ── Node / Mintlify ───────────────────────────────────
+node_modules/
+.mintlify/
+.next/
+out/
+
+# ── OS ────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Éditeurs ──────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# ── Divers ────────────────────────────────────────────
 *.bak
-```
+*.tmp
+dist/
+build/

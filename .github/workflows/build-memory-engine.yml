@@ -1,0 +1,106 @@
+name: Build Memory Engine
+
+on:
+  push:
+    paths:
+      - 'memory-engine/src/**'
+      - 'memory-engine/Cargo.toml'
+  workflow_dispatch:  # Déclenchement manuel possible
+
+jobs:
+  build:
+    name: Build — ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            target: x86_64-pc-windows-msvc
+            out_dir: bins/windows
+            binary: memory-engine.exe
+
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
+            out_dir: bins/linux
+            binary: memory-engine
+
+          - os: macos-latest
+            target: x86_64-apple-darwin
+            out_dir: bins/macos
+            binary: memory-engine
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: ${{ matrix.target }}
+
+      - name: Cache Cargo
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            memory-engine/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('memory-engine/Cargo.toml') }}
+
+      - name: Build release binary
+        working-directory: memory-engine
+        run: cargo build --release --target ${{ matrix.target }}
+
+      - name: Copy binary to bins/
+        shell: bash
+        run: |
+          mkdir -p memory-engine/${{ matrix.out_dir }}
+          cp memory-engine/target/${{ matrix.target }}/release/${{ matrix.binary }} \
+             memory-engine/${{ matrix.out_dir }}/${{ matrix.binary }}
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: memory-engine-${{ matrix.os }}
+          path: memory-engine/${{ matrix.out_dir }}/${{ matrix.binary }}
+
+  commit-bins:
+    name: Commit binaries to repo
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts/
+
+      - name: Move binaries into bins/
+        run: |
+          mkdir -p memory-engine/bins/windows
+          mkdir -p memory-engine/bins/linux
+          mkdir -p memory-engine/bins/macos
+
+          cp artifacts/memory-engine-windows-latest/memory-engine.exe \
+             memory-engine/bins/windows/memory-engine.exe
+
+          cp artifacts/memory-engine-ubuntu-latest/memory-engine \
+             memory-engine/bins/linux/memory-engine
+          chmod +x memory-engine/bins/linux/memory-engine
+
+          cp artifacts/memory-engine-macos-latest/memory-engine \
+             memory-engine/bins/macos/memory-engine
+          chmod +x memory-engine/bins/macos/memory-engine
+
+      - name: Commit and push binaries
+        uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "ci: update memory-engine binaries [skip ci]"
+          file_pattern: "memory-engine/bins/**"
+          commit_user_name: "github-actions[bot]"
+          commit_user_email: "github-actions[bot]@users.noreply.github.com"

@@ -1,0 +1,364 @@
+---
+title: API REST
+description: Référence complète des 20+ endpoints FastAPI — scans locaux, GitHub, utilisateurs et mémoire.
+---
+
+## Base URL
+
+```
+http://localhost:8000
+```
+
+Swagger UI interactif : `http://localhost:8000/docs`
+
+ReDoc : `http://localhost:8000/redoc`
+
+---
+
+## Endpoints généraux
+
+<ParamField path="GET /" type="endpoint">
+  Métadonnées du service.
+</ParamField>
+
+**Réponse :**
+
+```json
+{
+  "service": "Multi-Agent Security Scanner",
+  "version": "1.0.0",
+  "status": "running",
+  "agents": 8
+}
+```
+
+---
+
+<ParamField path="GET /agents" type="endpoint">
+  Liste des agents enregistrés avec leur description.
+</ParamField>
+
+**Réponse :**
+
+```json
+[
+  {"name": "triage",          "description": "Détecte les langages et prépare les cibles"},
+  {"name": "scanner",         "description": "Analyse statique multi-outil"},
+  {"name": "memory_safety",   "description": "Vulnérabilités mémoire (C/C++/Rust)"},
+  {"name": "semantic_analyst","description": "Failles logiques via LLM"},
+  {"name": "exploit_scorer",  "description": "Score CVSS 3.1 et exploitabilité"},
+  {"name": "patcher",         "description": "Génération de patches"},
+  {"name": "validator",       "description": "Validation des patches"},
+  {"name": "report",          "description": "Rapport final JSON"}
+]
+```
+
+---
+
+## Scans locaux
+
+### `POST /scan/local`
+
+Lance un scan sur un chemin local. Le scan s'exécute en arrière-plan.
+
+**Corps de la requête :**
+
+```json
+{
+  "repo_path": "/chemin/absolu/vers/projet",
+  "max_iterations": 3
+}
+```
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `repo_path` | string | Oui | Chemin absolu vers le dépôt |
+| `max_iterations` | integer | Non (défaut: 3) | Nombre max de retries patch |
+
+**Réponse `202 Accepted` :**
+
+```json
+{
+  "scan_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "status": "started",
+  "message": "Scan lancé en arrière-plan"
+}
+```
+
+---
+
+### `GET /scan/local/{scan_id}`
+
+Statut et rapport d'un scan local.
+
+**Réponse :**
+
+```json
+{
+  "scan_id": "f47ac10b...",
+  "status": "completed",   // "running" | "completed" | "failed"
+  "report": { ... }        // null si scan en cours
+}
+```
+
+---
+
+### `GET /scan/local/{scan_id}/vulnerabilities`
+
+Liste des vulnérabilités d'un scan local terminé.
+
+**Réponse :**
+
+```json
+{
+  "scan_id": "f47ac10b...",
+  "count": 5,
+  "vulnerabilities": [
+    {
+      "id": "...",
+      "title": "SQL Injection",
+      "severity": "critical",
+      "cvss_score": 9.1,
+      "file_path": "src/auth.py",
+      "line_start": 42,
+      "is_exploitable": true,
+      "patch_applied": true
+    }
+  ]
+}
+```
+
+---
+
+## Scans GitHub
+
+### `POST /scan/github`
+
+Clone le dépôt GitHub puis lance le scan.
+
+**Corps de la requête :**
+
+```json
+{
+  "repo_url": "https://github.com/user/repo",
+  "branch": "main",
+  "max_iterations": 3,
+  "cleanup_after": true
+}
+```
+
+| Champ | Type | Requis | Description |
+|-------|------|--------|-------------|
+| `repo_url` | string | Oui | URL complète du dépôt GitHub |
+| `branch` | string | Non (défaut: "main") | Branche à scanner |
+| `max_iterations` | integer | Non (défaut: 3) | Retries max patch |
+| `cleanup_after` | boolean | Non (défaut: true) | Supprimer le clone après scan |
+
+**Réponse :** identique à `POST /scan/local`
+
+---
+
+### `GET /scan/github/{scan_id}`
+
+Statut du scan GitHub.
+
+---
+
+### `GET /scan/github/{scan_id}/vulnerabilities`
+
+Vulnérabilités du scan GitHub.
+
+---
+
+## Gestion des utilisateurs
+
+### `POST /user/register`
+
+Crée un compte utilisateur dans SQLite.
+
+**Corps :**
+
+```json
+{
+  "user_id": "user_alice",
+  "username": "alice"
+}
+```
+
+**Réponse `201 Created` :**
+
+```json
+{
+  "user_id": "user_alice",
+  "username": "alice",
+  "message": "Utilisateur créé"
+}
+```
+
+---
+
+### `POST /user/{user_id}/scan`
+
+Lance un scan GitHub associé à un utilisateur. Le résultat est persisté dans l'historique SQLite.
+
+**Corps :**
+
+```json
+{
+  "repo_url": "https://github.com/user/repo",
+  "branch": "main",
+  "max_iterations": 3
+}
+```
+
+---
+
+### `POST /user/{user_id}/scan/local`
+
+Lance un scan local associé à un utilisateur.
+
+**Corps :**
+
+```json
+{
+  "repo_path": "/chemin/vers/projet",
+  "max_iterations": 3
+}
+```
+
+---
+
+### `GET /user/{user_id}/history`
+
+Historique complet des scans d'un utilisateur.
+
+**Réponse :**
+
+```json
+{
+  "user_id": "user_alice",
+  "scans": [
+    {
+      "scan_id": "...",
+      "repo_url": "https://github.com/user/repo",
+      "started_at": "2026-05-30T14:00:00Z",
+      "completed_at": "2026-05-30T14:03:22Z",
+      "vulnerabilities_count": 7,
+      "status": "completed"
+    }
+  ]
+}
+```
+
+---
+
+### `GET /user/{user_id}/projects`
+
+Projets scannés par un utilisateur avec statut de la dernière analyse.
+
+**Réponse :**
+
+```json
+{
+  "user_id": "user_alice",
+  "projects": [
+    {
+      "repo_url": "https://github.com/user/repo",
+      "repo_name": "repo",
+      "last_scan": "2026-05-30T14:03:22Z",
+      "vulnerabilities_count": 7,
+      "status": "completed"
+    }
+  ]
+}
+```
+
+---
+
+## Mémoire persistante
+
+### `POST /memory/test`
+
+Tester le store ou le retrieve de patterns Qdrant.
+
+**Corps :**
+
+```json
+{
+  "pattern": "SQL Injection description",
+  "code_snippet": "cursor.execute(f'SELECT * WHERE id={uid}')",
+  "action": "store"   // "store" | "retrieve"
+}
+```
+
+---
+
+### `GET /memory/stats`
+
+Statistiques de la mémoire (Qdrant + SQLite).
+
+**Réponse :**
+
+```json
+{
+  "qdrant_available": true,
+  "collections": {
+    "vuln_patterns": {"count": 142},
+    "patches": {"count": 38}
+  },
+  "sqlite_users": 5,
+  "sqlite_scans": 23
+}
+```
+
+---
+
+## Comportement général
+
+<Note>
+  Tous les scans (`/scan/local`, `/scan/github`, `/user/{id}/scan`) s'exécutent en **arrière-plan**. L'endpoint retourne immédiatement un `scan_id`. Interrogez le statut via `GET /scan/{type}/{scan_id}` jusqu'à `"status": "completed"`.
+</Note>
+
+**Codes HTTP utilisés :**
+
+| Code | Situation |
+|------|-----------|
+| `200` | Requête réussie |
+| `201` | Ressource créée (utilisateur) |
+| `202` | Scan démarré en arrière-plan |
+| `404` | `scan_id` ou `user_id` introuvable |
+| `422` | Corps de requête invalide (validation Pydantic) |
+| `500` | Erreur interne |
+
+---
+
+## Exemples cURL complets
+
+<CodeGroup>
+  ```bash Scan local
+  curl -X POST http://localhost:8000/scan/local \
+    -H "Content-Type: application/json" \
+    -d '{"repo_path": "/home/user/myapp", "max_iterations": 3}'
+  ```
+
+  ```bash Scan GitHub
+  curl -X POST http://localhost:8000/scan/github \
+    -H "Content-Type: application/json" \
+    -d '{"repo_url": "https://github.com/user/repo", "branch": "main"}'
+  ```
+
+  ```bash Créer utilisateur + scan
+  # 1. Créer l'utilisateur
+  curl -X POST http://localhost:8000/user/register \
+    -H "Content-Type: application/json" \
+    -d '{"user_id": "u1", "username": "alice"}'
+
+  # 2. Scanner un dépôt
+  curl -X POST http://localhost:8000/user/u1/scan \
+    -H "Content-Type: application/json" \
+    -d '{"repo_url": "https://github.com/user/repo"}'
+
+  # 3. Consulter l'historique
+  curl http://localhost:8000/user/u1/history
+  ```
+</CodeGroup>

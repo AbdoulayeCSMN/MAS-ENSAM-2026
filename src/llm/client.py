@@ -1,4 +1,4 @@
-"""LLM client using Groq + NVIDIA endpoints (NO ANTHROPIC)."""
+"""LLM client using Groq + NVIDIA endpoints."""
 
 from __future__ import annotations
 

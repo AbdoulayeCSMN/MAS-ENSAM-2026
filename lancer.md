@@ -2,7 +2,7 @@ $env:PYTHONPATH = "C:\Users\Alif computer\Desktop\projet technologie web\agentIA
 python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000, reload=False)"
 
 
-pour lance ron peut aussi utiliser cela :
+pour lancer on peut aussi utiliser cela :
 
 
 python -c "import sys; sys.path.insert(0, 'src'); from api import app; import uvicorn; uvicorn.run(app, host='0.0.0.0', port=8000, reload=False)"

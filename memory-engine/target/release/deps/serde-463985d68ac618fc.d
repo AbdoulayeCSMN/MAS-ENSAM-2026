@@ -1,0 +1,14 @@
+C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\deps\serde-463985d68ac618fc.d: C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\build\serde-cdff49383a6ff3cf\out/private.rs
+
+C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\deps\libserde-463985d68ac618fc.rlib: C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\build\serde-cdff49383a6ff3cf\out/private.rs
+
+C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\deps\libserde-463985d68ac618fc.rmeta: C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\build\serde-cdff49383a6ff3cf\out/private.rs
+
+C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\lib.rs:
+C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\integer128.rs:
+C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\mod.rs:
+C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\de.rs:
+C:\Users\pc\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\serde-1.0.228\src\private\ser.rs:
+C:\Users\pc\Desktop\DOSSIERS_BUREAU\MAS-ENSAM-2026\memory-engine\target\release\build\serde-cdff49383a6ff3cf\out/private.rs:
+
+# env-dep:OUT_DIR=C:\\Users\\pc\\Desktop\\DOSSIERS_BUREAU\\MAS-ENSAM-2026\\memory-engine\\target\\release\\build\\serde-cdff49383a6ff3cf\\out

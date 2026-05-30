@@ -1,0 +1,261 @@
+---
+title: Modèles de données
+description: Structures de données centrales — AgentState, Vulnerability, ScanTarget et enums.
+---
+
+## Vue d'ensemble
+
+Tous les modèles sont définis dans `src/graph/state.py`. Ils forment l'épine dorsale du workflow : chaque agent lit et écrit dans ces structures.
+
+---
+
+## `Vulnerability`
+
+Représente une vulnérabilité détectée par n'importe quel agent.
+
+```python
+@dataclass
+class Vulnerability:
+    # Identification
+    id: str                      # UUID généré automatiquement
+    title: str                   # Titre court ("SQL Injection in login()")
+    severity: Severity           # CRITICAL | HIGH | MEDIUM | LOW | INFO
+    cwe_id: str                  # "CWE-89" (SQL Injection)
+    cve_id: str | None           # "CVE-2024-1234" ou None
+
+    # Localisation
+    file_path: str               # Chemin relatif depuis repo_root
+    line_start: int
+    line_end: int
+    code_snippet: str            # Code vulnérable (±3 lignes contexte)
+
+    # Description
+    description: str             # Explication détaillée
+
+    # Scoring (rempli par ExploitScorerAgent)
+    is_exploitable: bool         # Défaut: False
+    exploitability_score: float  # Score interne 0–10
+    cvss_score: float            # CVSS 3.1 base score 0–10
+
+    # Taint analysis
+    taint_sources: list[str]     # Sources non sûres ("user_input", "request.GET")
+    taint_sinks: list[str]       # Sinks dangereux ("cursor.execute", "eval")
+
+    # Patching (rempli par PatcherAgent / ValidatorAgent)
+    patch_applied: bool          # Défaut: False
+    patch_diff: str | None       # Unified diff format
+
+    # Flags
+    memory_safety_issue: bool    # True si détecté par MemorySafetyAgent
+    extra: dict[str, Any]        # Métadonnées libres (attack_vector, fix, …)
+```
+
+### Cycle de vie d'une `Vulnerability`
+
+```
+ScannerAgent         → crée avec id, title, severity, cwe_id, file_path, line_*, code_snippet
+MemorySafetyAgent    → idem + memory_safety_issue=True
+SemanticAnalystAgent → idem + taint_sources/sinks enrichis
+ExploitScorerAgent   → remplit is_exploitable, cvss_score, exploitability_score
+PatcherAgent         → remplit patch_diff
+ValidatorAgent       → met patch_applied=True si validé
+```
+
+---
+
+## `ScanTarget`
+
+Représente un fichier à analyser.
+
+```python
+@dataclass
+class ScanTarget:
+    path: str                  # Chemin relatif depuis repo_root
+    language: Language         # Langage détecté
+    content: str | None        # Contenu du fichier (chargé par TriageAgent)
+    file_hash: str | None      # SHA-256 — utilisé comme clé de cache
+```
+
+---
+
+## `AgentState`
+
+État global partagé entre tous les agents via LangGraph.
+
+```python
+@dataclass
+class AgentState:
+    # ── Entrées ────────────────────────────────────
+    targets: list[ScanTarget]          # Fichiers détectés par TriageAgent
+    repo_root: str                     # Chemin absolu du dépôt
+    scan_id: str                       # UUID unique du scan
+
+    # ── Détection ──────────────────────────────────
+    detected_languages: set[Language]  # Langages présents
+    needs_memory_safety: bool          # True si C / C++ / Rust présent
+
+    # ── Findings ───────────────────────────────────
+    raw_findings: list[dict]           # Résultats bruts des outils CLI
+    vulnerabilities: list[Vulnerability]        # Findings statiques normalisés
+    memory_safety_findings: list[Vulnerability] # Findings mémoire
+    semantic_findings: list[Vulnerability]      # Findings LLM
+
+    # ── Patching ───────────────────────────────────
+    patches_pending: list[Vulnerability]        # CVSS ≥ 7.0 + exploitable
+    patches_validated: list[Vulnerability]      # Patches acceptés
+    patches_rejected: list[Vulnerability]       # Patches rejetés
+
+    # ── Output ─────────────────────────────────────
+    report: dict                       # Rapport JSON final
+    errors: list[str]                  # Erreurs non fatales accumulées
+
+    # ── Contrôle ───────────────────────────────────
+    current_agent: str                 # Nom de l'agent en cours
+    iteration: int                     # Numéro d'itération patch (0-based)
+    max_patch_iterations: int = 3      # Limite de retries
+```
+
+---
+
+## Enum `Language`
+
+```python
+class Language(str, Enum):
+    C          = "c"
+    CPP        = "cpp"
+    PYTHON     = "python"
+    JAVASCRIPT = "javascript"
+    TYPESCRIPT = "typescript"
+    RUST       = "rust"
+    JAVA       = "java"
+    GO         = "go"
+    PHP        = "php"
+    UNKNOWN    = "unknown"
+```
+
+**Mapping extension → langage (TriageAgent) :**
+
+| Extension(s) | Language |
+|-------------|----------|
+| `.c`, `.h` | `C` |
+| `.cpp`, `.cc`, `.cxx`, `.hpp` | `CPP` |
+| `.py` | `PYTHON` |
+| `.js`, `.mjs` | `JAVASCRIPT` |
+| `.ts`, `.tsx` | `TYPESCRIPT` |
+| `.rs` | `RUST` |
+| `.java` | `JAVA` |
+| `.go` | `GO` |
+| `.php` | `PHP` |
+
+---
+
+## Enum `Severity`
+
+```python
+class Severity(str, Enum):
+    CRITICAL = "critical"
+    HIGH     = "high"
+    MEDIUM   = "medium"
+    LOW      = "low"
+    INFO     = "info"
+```
+
+**Correspondance CVSS par défaut (fallback si LLM indisponible) :**
+
+| Severity | CVSS Score |
+|----------|-----------|
+| CRITICAL | 9.5 |
+| HIGH | 7.5 |
+| MEDIUM | 5.0 |
+| LOW | 3.0 |
+| INFO | 1.0 |
+
+---
+
+## Structure du rapport final
+
+Le `ReportAgent` produit ce JSON stocké dans `state.report` :
+
+```json
+{
+  "scan_id": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+  "generated_at": "2026-05-30T14:23:00Z",
+  "repo": "/path/to/repo",
+  "languages": ["python", "javascript"],
+  "statistics": {
+    "total": 15,
+    "exploitable": 3,
+    "by_severity": {
+      "critical": 2,
+      "high": 5,
+      "medium": 6,
+      "low": 2,
+      "info": 0
+    },
+    "top_cwes": [
+      ["CWE-79", 5],
+      ["CWE-89", 3],
+      ["CWE-22", 2]
+    ]
+  },
+  "vulnerabilities": [
+    {
+      "id": "...",
+      "title": "SQL Injection in login()",
+      "severity": "critical",
+      "cwe_id": "CWE-89",
+      "cvss_score": 9.1,
+      "is_exploitable": true,
+      "file_path": "src/auth.py",
+      "line_start": 42,
+      "patch_applied": true
+    }
+  ],
+  "patches": {
+    "applied": 2,
+    "rejected": 1
+  },
+  "errors": []
+}
+```
+
+---
+
+## Modèles Pydantic de l'API
+
+Les requêtes REST utilisent des modèles Pydantic (définis dans `src/api.py`) :
+
+<Tabs>
+  <Tab title="ScanRequest">
+    ```python
+    class ScanRequest(BaseModel):
+        repo_path: str
+        max_iterations: int = 3
+    ```
+  </Tab>
+  <Tab title="GitHubScanRequest">
+    ```python
+    class GitHubScanRequest(BaseModel):
+        repo_url: str
+        branch: str = "main"
+        max_iterations: int = 3
+        cleanup_after: bool = True
+    ```
+  </Tab>
+  <Tab title="UserScanRequest">
+    ```python
+    class UserScanRequest(BaseModel):
+        repo_url: str
+        branch: str = "main"
+        max_iterations: int = 3
+    ```
+  </Tab>
+  <Tab title="MemoryTestRequest">
+    ```python
+    class MemoryTestRequest(BaseModel):
+        pattern: str
+        code_snippet: str
+        action: str  # "store" | "retrieve"
+    ```
+  </Tab>
+</Tabs>

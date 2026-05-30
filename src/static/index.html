@@ -1,0 +1,1049 @@
+<!DOCTYPE html>
+<html lang="fr" data-theme="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MAS — Multi-Agent Security Scanner</title>
+  <style>
+    /* ═══════════════════════════════════════════
+       RESET & VARIABLES
+    ═══════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0f172a;
+      --bg2:       #1e293b;
+      --bg3:       #263347;
+      --border:    #334155;
+      --primary:   #0D9373;
+      --primary-l: #07C983;
+      --text:      #e2e8f0;
+      --text-2:    #94a3b8;
+      --text-3:    #64748b;
+      --red:       #ef4444;
+      --orange:    #f97316;
+      --yellow:    #eab308;
+      --blue:      #3b82f6;
+      --radius:    10px;
+      --shadow:    0 4px 24px rgba(0,0,0,.4);
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ═══════════════════════════════════════════
+       TOPBAR
+    ═══════════════════════════════════════════ */
+    .topbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 2rem;
+      height: 56px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--border);
+      position: sticky; top: 0; z-index: 100;
+    }
+    .logo { display: flex; align-items: center; gap: .6rem; }
+    .logo-icon {
+      width: 30px; height: 30px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-l));
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+    }
+    .logo-text { font-weight: 700; font-size: .95rem; letter-spacing: -.3px; }
+    .logo-sub  { font-size: .7rem; color: var(--text-3); letter-spacing: .06em; }
+
+    .topbar-right { display: flex; align-items: center; gap: 1rem; }
+    .api-status {
+      display: flex; align-items: center; gap: .4rem;
+      font-size: .75rem; color: var(--text-2);
+    }
+    .dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: var(--text-3);
+    }
+    .dot.online  { background: var(--primary-l); box-shadow: 0 0 6px var(--primary-l); }
+    .dot.offline { background: var(--red); }
+
+    /* ═══════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════ */
+    .layout {
+      display: grid;
+      grid-template-columns: 340px 1fr;
+      flex: 1;
+      gap: 0;
+    }
+
+    /* LEFT PANEL */
+    .panel-left {
+      border-right: 1px solid var(--border);
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+      overflow-y: auto;
+      height: calc(100vh - 56px);
+      position: sticky; top: 56px;
+    }
+
+    /* RIGHT PANEL */
+    .panel-right {
+      padding: 1.5rem 2rem;
+      overflow-y: auto;
+    }
+
+    /* ═══════════════════════════════════════════
+       FORM
+    ═══════════════════════════════════════════ */
+    .section-title {
+      font-size: .65rem;
+      font-weight: 600;
+      letter-spacing: .08em;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: .6rem;
+    }
+
+    .tabs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      background: var(--bg);
+      border-radius: var(--radius);
+      padding: 3px;
+      border: 1px solid var(--border);
+    }
+    .tab-btn {
+      padding: .45rem .5rem;
+      border: none; background: transparent;
+      color: var(--text-2); cursor: pointer;
+      border-radius: 7px;
+      font-size: .8rem; font-weight: 500;
+      transition: all .15s;
+      display: flex; align-items: center; justify-content: center; gap: .4rem;
+    }
+    .tab-btn.active {
+      background: var(--bg3);
+      color: var(--text);
+    }
+    .tab-btn svg { width: 13px; height: 13px; }
+
+    .form-group { display: flex; flex-direction: column; gap: .4rem; }
+    label { font-size: .78rem; color: var(--text-2); font-weight: 500; }
+    input, select {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      padding: .55rem .8rem;
+      font-size: .85rem;
+      outline: none;
+      transition: border-color .15s;
+      width: 100%;
+    }
+    input:focus, select:focus { border-color: var(--primary); }
+    input::placeholder { color: var(--text-3); }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: .75rem; }
+
+    .btn-scan {
+      width: 100%;
+      padding: .7rem;
+      background: linear-gradient(135deg, var(--primary), var(--primary-l));
+      color: #fff;
+      border: none; border-radius: 8px;
+      font-size: .9rem; font-weight: 600;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      display: flex; align-items: center; justify-content: center; gap: .5rem;
+    }
+    .btn-scan:hover  { opacity: .9; transform: translateY(-1px); }
+    .btn-scan:active { transform: translateY(0); }
+    .btn-scan:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    /* Quick examples */
+    .examples { display: flex; flex-direction: column; gap: .4rem; }
+    .example-chip {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: .4rem .7rem;
+      font-size: .73rem;
+      color: var(--text-2);
+      cursor: pointer;
+      transition: border-color .15s, color .15s;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .example-chip:hover { border-color: var(--primary); color: var(--primary-l); }
+
+    /* History */
+    .history-list { display: flex; flex-direction: column; gap: .5rem; }
+    .history-item {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: .6rem .8rem;
+      cursor: pointer;
+      transition: border-color .15s;
+      font-size: .78rem;
+    }
+    .history-item:hover { border-color: var(--primary); }
+    .history-item .h-name { font-weight: 600; color: var(--text); }
+    .history-item .h-meta { color: var(--text-3); font-size: .7rem; margin-top: .15rem; }
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: .1rem .45rem;
+      border-radius: 4px;
+      font-size: .65rem; font-weight: 600;
+      letter-spacing: .03em;
+    }
+    .badge-ok     { background: rgba(13,147,115,.2); color: var(--primary-l); }
+    .badge-run    { background: rgba(234,179,8,.15);  color: #fbbf24; }
+    .badge-fail   { background: rgba(239,68,68,.15);  color: var(--red); }
+
+    /* ═══════════════════════════════════════════
+       RIGHT PANEL — STATES
+    ═══════════════════════════════════════════ */
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: calc(100vh - 160px);
+      gap: 1rem; color: var(--text-3); text-align: center;
+    }
+    .empty-icon {
+      width: 72px; height: 72px;
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 32px;
+    }
+    .empty-state h2 { font-size: 1.1rem; color: var(--text-2); }
+    .empty-state p  { font-size: .85rem; max-width: 320px; }
+
+    /* ═══════════════════════════════════════════
+       PIPELINE PROGRESS
+    ═══════════════════════════════════════════ */
+    .progress-wrap { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    .progress-header { display: flex; align-items: center; justify-content: space-between; }
+    .progress-title  { font-size: 1.1rem; font-weight: 700; }
+    .progress-repo   { font-size: .8rem; color: var(--text-3); margin-top: .2rem; }
+
+    .pipeline {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: .75rem;
+    }
+    .agent-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem .8rem;
+      display: flex; flex-direction: column;
+      align-items: center; gap: .5rem;
+      text-align: center;
+      transition: border-color .2s, background .2s;
+      position: relative;
+    }
+    .agent-card.active  { border-color: var(--primary); background: rgba(13,147,115,.08); }
+    .agent-card.done    { border-color: #1e4a3d; background: rgba(13,147,115,.05); }
+    .agent-card.error   { border-color: var(--red); background: rgba(239,68,68,.06); }
+    .agent-card.waiting { opacity: .4; }
+
+    .agent-icon {
+      width: 38px; height: 38px;
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px;
+      background: var(--bg3);
+    }
+    .agent-card.active .agent-icon { background: rgba(13,147,115,.3); animation: pulse 1.5s infinite; }
+    .agent-card.done   .agent-icon { background: rgba(13,147,115,.2); }
+    .agent-card.error  .agent-icon { background: rgba(239,68,68,.2); }
+
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 0 0 rgba(13,147,115,.4); }
+      50%      { box-shadow: 0 0 0 6px rgba(13,147,115,0); }
+    }
+
+    .agent-name  { font-size: .72rem; font-weight: 600; color: var(--text); }
+    .agent-state { font-size: .65rem; color: var(--text-3); }
+    .agent-card.active  .agent-state { color: var(--primary-l); }
+    .agent-card.done    .agent-state { color: var(--primary); }
+    .agent-card.error   .agent-state { color: var(--red); }
+
+    .spinner {
+      position: absolute; top: 6px; right: 6px;
+      width: 14px; height: 14px;
+      border: 2px solid transparent;
+      border-top-color: var(--primary-l);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* Scan log */
+    .scan-log {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: .9rem 1rem;
+      font-size: .75rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      color: var(--text-2);
+      height: 120px;
+      overflow-y: auto;
+      display: flex; flex-direction: column; gap: .15rem;
+    }
+    .log-line { display: flex; gap: .6rem; }
+    .log-time  { color: var(--text-3); flex-shrink: 0; }
+    .log-msg.ok  { color: var(--primary-l); }
+    .log-msg.err { color: var(--red); }
+    .log-msg.warn{ color: #fbbf24; }
+
+    /* ═══════════════════════════════════════════
+       RESULTS
+    ═══════════════════════════════════════════ */
+    .results-wrap { display: flex; flex-direction: column; gap: 1.5rem; }
+
+    /* Stat cards */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: .75rem;
+    }
+    .stat-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1rem;
+      display: flex; flex-direction: column; gap: .3rem;
+    }
+    .stat-card .s-val  { font-size: 1.7rem; font-weight: 700; line-height: 1; }
+    .stat-card .s-label{ font-size: .7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; }
+    .s-critical { color: #f87171; }
+    .s-high     { color: var(--orange); }
+    .s-medium   { color: var(--yellow); }
+    .s-total    { color: var(--primary-l); }
+    .s-patched  { color: #34d399; }
+
+    /* Section header */
+    .sec-head {
+      display: flex; align-items: center; justify-content: space-between;
+      padding-bottom: .6rem;
+      border-bottom: 1px solid var(--border);
+    }
+    .sec-head h3 { font-size: .9rem; font-weight: 600; }
+    .count-chip {
+      background: var(--bg3);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: .1rem .55rem;
+      font-size: .72rem; color: var(--text-2);
+    }
+
+    /* Filters */
+    .filters { display: flex; gap: .5rem; flex-wrap: wrap; }
+    .filter-btn {
+      padding: .3rem .75rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-2);
+      font-size: .75rem; cursor: pointer;
+      transition: all .15s;
+    }
+    .filter-btn.active, .filter-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary-l);
+      background: rgba(13,147,115,.1);
+    }
+    .filter-btn.f-critical.active { border-color:#f87171; color:#f87171; background:rgba(248,113,113,.1); }
+    .filter-btn.f-high.active     { border-color:var(--orange); color:var(--orange); background:rgba(249,115,22,.1); }
+    .filter-btn.f-medium.active   { border-color:var(--yellow); color:var(--yellow); background:rgba(234,179,8,.1); }
+    .filter-btn.f-low.active      { border-color:var(--blue); color:var(--blue); background:rgba(59,130,246,.1); }
+
+    /* Vuln list */
+    .vuln-list { display: flex; flex-direction: column; gap: .6rem; }
+
+    .vuln-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      transition: border-color .15s;
+    }
+    .vuln-card:hover { border-color: var(--bg3); }
+
+    .vuln-head {
+      display: flex; align-items: center; gap: .75rem;
+      padding: .85rem 1rem;
+      cursor: pointer;
+    }
+    .sev-bar {
+      width: 4px; height: 36px;
+      border-radius: 4px; flex-shrink: 0;
+    }
+    .sev-critical { background: #f87171; }
+    .sev-high     { background: var(--orange); }
+    .sev-medium   { background: var(--yellow); }
+    .sev-low      { background: var(--blue); }
+    .sev-info     { background: var(--text-3); }
+
+    .vuln-main { flex: 1; min-width: 0; }
+    .vuln-title {
+      font-size: .85rem; font-weight: 600;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .vuln-meta { display: flex; gap: .75rem; margin-top: .2rem; flex-wrap: wrap; }
+    .vuln-meta span { font-size: .7rem; color: var(--text-3); display: flex; align-items: center; gap: .25rem; }
+
+    .vuln-right { display: flex; align-items: center; gap: .6rem; flex-shrink: 0; }
+    .cvss-badge {
+      font-size: .72rem; font-weight: 700;
+      padding: .15rem .5rem; border-radius: 5px;
+    }
+    .cvss-c { background:rgba(248,113,113,.2); color:#f87171; }
+    .cvss-h { background:rgba(249,115,22,.2);  color:var(--orange); }
+    .cvss-m { background:rgba(234,179,8,.2);   color:var(--yellow); }
+    .cvss-l { background:rgba(59,130,246,.2);  color:var(--blue); }
+
+    .patch-tag {
+      font-size: .65rem; padding: .15rem .45rem;
+      border-radius: 4px; font-weight: 600;
+    }
+    .patch-applied  { background:rgba(13,147,115,.2); color:var(--primary-l); }
+    .patch-rejected { background:rgba(239,68,68,.15); color:var(--red); }
+    .patch-none     { background:var(--bg3); color:var(--text-3); }
+
+    .chevron { color: var(--text-3); font-size: .8rem; transition: transform .2s; }
+    .vuln-card.open .chevron { transform: rotate(180deg); }
+
+    /* Expanded detail */
+    .vuln-detail {
+      border-top: 1px solid var(--border);
+      padding: 1rem;
+      display: none;
+      flex-direction: column;
+      gap: .85rem;
+    }
+    .vuln-card.open .vuln-detail { display: flex; }
+
+    .detail-label { font-size: .7rem; color: var(--text-3); text-transform: uppercase; letter-spacing: .06em; margin-bottom: .3rem; }
+    .desc-text { font-size: .8rem; color: var(--text-2); line-height: 1.6; }
+
+    pre.snippet {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .75rem;
+      font-size: .75rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      overflow-x: auto;
+      color: #a5f3c4;
+      line-height: 1.5;
+    }
+    pre.snippet .highlight { color: #f87171; font-weight: bold; }
+
+    pre.diff {
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: .75rem;
+      font-size: .75rem;
+      font-family: 'Consolas', 'Monaco', monospace;
+      overflow-x: auto;
+      line-height: 1.5;
+      white-space: pre;
+    }
+    .diff-add { color: #4ade80; }
+    .diff-rem { color: #f87171; }
+    .diff-ctx { color: var(--text-3); }
+
+    /* Empty vuln */
+    .no-vuln {
+      text-align: center; padding: 2rem;
+      color: var(--text-3); font-size: .85rem;
+    }
+
+    /* ═══════════════════════════════════════════
+       SCROLLBAR
+    ═══════════════════════════════════════════ */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+
+    /* ═══════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════ */
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .panel-left { position: static; height: auto; border-right: none; border-bottom: 1px solid var(--border); }
+      .pipeline { grid-template-columns: repeat(2, 1fr); }
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+    @media (max-width: 540px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .pipeline { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════ TOPBAR ══════════════ -->
+<header class="topbar">
+  <div class="logo">
+    <div class="logo-icon">🛡️</div>
+    <div>
+      <div class="logo-text">MAS Scanner</div>
+      <div class="logo-sub">MULTI-AGENT SECURITY</div>
+    </div>
+  </div>
+  <div class="topbar-right">
+    <div class="api-status">
+      <div class="dot" id="apiDot"></div>
+      <span id="apiStatusText">Connexion…</span>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ LAYOUT ══════════════ -->
+<div class="layout">
+
+  <!-- ── LEFT PANEL ── -->
+  <aside class="panel-left">
+
+    <!-- Tabs GitHub / Local -->
+    <div>
+      <div class="section-title">Source du dépôt</div>
+      <div class="tabs">
+        <button class="tab-btn active" id="tabGithub" onclick="switchTab('github')">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0 1 12 6.844a9.59 9.59 0 0 1 2.504.337c1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.02 10.02 0 0 0 22 12.017C22 6.484 17.522 2 12 2z"/></svg>
+          GitHub
+        </button>
+        <button class="tab-btn" id="tabLocal" onclick="switchTab('local')">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18M3 12h18M3 17h18"/></svg>
+          Local
+        </button>
+      </div>
+    </div>
+
+    <!-- GitHub form -->
+    <div id="formGithub">
+      <div class="form-group">
+        <label>URL du dépôt GitHub</label>
+        <input id="repoUrl" type="text" placeholder="https://github.com/user/repo" />
+      </div>
+      <div class="row2">
+        <div class="form-group">
+          <label>Branche</label>
+          <input id="branch" type="text" placeholder="main" value="main" />
+        </div>
+        <div class="form-group">
+          <label>Max itérations</label>
+          <select id="maxIter">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="5">5</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Local form -->
+    <div id="formLocal" style="display:none">
+      <div class="form-group">
+        <label>Chemin local du dépôt</label>
+        <input id="repoPath" type="text" placeholder="C:\chemin\vers\projet" />
+      </div>
+      <div class="form-group">
+        <label>Max itérations</label>
+        <select id="maxIterLocal">
+          <option value="1">1</option>
+          <option value="2">2</option>
+          <option value="3" selected>3</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Scan button -->
+    <button class="btn-scan" id="scanBtn" onclick="startScan()">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      Lancer le scan
+    </button>
+
+    <!-- Quick examples -->
+    <div>
+      <div class="section-title">Exemples rapides</div>
+      <div class="examples">
+        <div class="example-chip" onclick="fillExample('https://github.com/OWASP/WebGoat')">
+          🎯 OWASP WebGoat (Java vulnérable)
+        </div>
+        <div class="example-chip" onclick="fillExample('https://github.com/juice-shop/juice-shop')">
+          🧃 OWASP Juice Shop (Node.js)
+        </div>
+        <div class="example-chip" onclick="fillExample('https://github.com/digininja/DVWA')">
+          🐛 DVWA (PHP vulnérable)
+        </div>
+        <div class="example-chip" onclick="fillExample('https://github.com/payatu/vuln-webgoat')">
+          🔓 vuln-webgoat (Python)
+        </div>
+      </div>
+    </div>
+
+    <!-- History -->
+    <div>
+      <div class="section-title">Scans récents</div>
+      <div class="history-list" id="historyList">
+        <div style="font-size:.75rem;color:var(--text-3);text-align:center;padding:.5rem">Aucun scan récent</div>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── RIGHT PANEL ── -->
+  <main class="panel-right" id="rightPanel">
+
+    <!-- Empty state -->
+    <div class="empty-state" id="emptyState">
+      <div class="empty-icon">🛡️</div>
+      <h2>Prêt à scanner</h2>
+      <p>Entrez une URL GitHub ou un chemin local, puis lancez le scan pour détecter les vulnérabilités.</p>
+    </div>
+
+    <!-- Progress view (hidden) -->
+    <div id="progressView" style="display:none" class="progress-wrap">
+
+      <div class="progress-header">
+        <div>
+          <div class="progress-title">Scan en cours…</div>
+          <div class="progress-repo" id="progressRepo"></div>
+        </div>
+        <div class="badge badge-run">⚡ Running</div>
+      </div>
+
+      <!-- Agent pipeline -->
+      <div>
+        <div class="section-title" style="margin-bottom:.75rem">Pipeline agents</div>
+        <div class="pipeline" id="pipelineGrid"></div>
+      </div>
+
+      <!-- Log -->
+      <div>
+        <div class="section-title" style="margin-bottom:.5rem">Logs</div>
+        <div class="scan-log" id="scanLog"></div>
+      </div>
+
+    </div>
+
+    <!-- Results view (hidden) -->
+    <div id="resultsView" style="display:none" class="results-wrap">
+
+      <div class="sec-head" style="border:none;padding-bottom:0">
+        <div>
+          <div style="font-size:1.15rem;font-weight:700" id="resultTitle">Résultats</div>
+          <div style="font-size:.78rem;color:var(--text-3);margin-top:.2rem" id="resultRepo"></div>
+        </div>
+        <button class="filter-btn" onclick="resetView()" style="font-size:.75rem">
+          ← Nouveau scan
+        </button>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats-grid" id="statsGrid"></div>
+
+      <!-- Vulnerabilities -->
+      <div>
+        <div class="sec-head">
+          <h3>Vulnérabilités</h3>
+          <span class="count-chip" id="vulnCount">0</span>
+        </div>
+
+        <div class="filters" style="margin:.75rem 0" id="filterBar">
+          <button class="filter-btn active" onclick="setFilter('all', this)">Toutes</button>
+          <button class="filter-btn f-critical" onclick="setFilter('critical', this)">🔴 Critical</button>
+          <button class="filter-btn f-high"     onclick="setFilter('high', this)">🟠 High</button>
+          <button class="filter-btn f-medium"   onclick="setFilter('medium', this)">🟡 Medium</button>
+          <button class="filter-btn f-low"      onclick="setFilter('low', this)">🔵 Low</button>
+          <button class="filter-btn"            onclick="setFilter('patched', this)">✅ Patchées</button>
+        </div>
+
+        <div class="vuln-list" id="vulnList"></div>
+      </div>
+
+    </div>
+
+  </main>
+</div>
+
+<script>
+/* ══════════════════════════════════════
+   CONFIG
+══════════════════════════════════════ */
+const API = '';  // même origine
+
+/* ══════════════════════════════════════
+   STATE
+══════════════════════════════════════ */
+let currentTab   = 'github';
+let activeScanId = null;
+let pollTimer    = null;
+let allVulns     = [];
+let activeFilter = 'all';
+let scanHistory  = JSON.parse(localStorage.getItem('mas_history') || '[]');
+
+const AGENTS = [
+  { key: 'triage',          icon: '🔍', name: 'Triage',          desc: 'Détection langages' },
+  { key: 'scanner',         icon: '⚙️', name: 'Scanner',         desc: 'Analyse statique'   },
+  { key: 'memory_safety',   icon: '🧠', name: 'MemorySafety',    desc: 'C/C++/Rust rules'   },
+  { key: 'semantic_analyst',icon: '💡', name: 'Semantic',        desc: 'LLM 70B + RAG'      },
+  { key: 'exploit_scorer',  icon: '📊', name: 'ExploitScorer',   desc: 'CVSS 3.1'           },
+  { key: 'patcher',         icon: '🔧', name: 'Patcher',         desc: 'Génération patches' },
+  { key: 'validator',       icon: '✅', name: 'Validator',       desc: 'Re-scan + régress.' },
+  { key: 'report',          icon: '📄', name: 'Report',          desc: 'Rapport final'      },
+];
+
+/* ══════════════════════════════════════
+   API STATUS CHECK
+══════════════════════════════════════ */
+async function checkApi() {
+  try {
+    const r = await fetch(`${API}/`, { signal: AbortSignal.timeout(3000) });
+    const ok = r.ok;
+    document.getElementById('apiDot').className = `dot ${ok ? 'online' : 'offline'}`;
+    document.getElementById('apiStatusText').textContent = ok ? 'API en ligne' : 'API hors ligne';
+  } catch {
+    document.getElementById('apiDot').className = 'dot offline';
+    document.getElementById('apiStatusText').textContent = 'API hors ligne';
+  }
+}
+checkApi();
+setInterval(checkApi, 10000);
+
+/* ══════════════════════════════════════
+   TABS
+══════════════════════════════════════ */
+function switchTab(tab) {
+  currentTab = tab;
+  document.getElementById('tabGithub').classList.toggle('active', tab === 'github');
+  document.getElementById('tabLocal').classList.toggle('active', tab === 'local');
+  document.getElementById('formGithub').style.display = tab === 'github' ? '' : 'none';
+  document.getElementById('formLocal').style.display  = tab === 'local'  ? '' : 'none';
+}
+
+function fillExample(url) {
+  switchTab('github');
+  document.getElementById('repoUrl').value = url;
+}
+
+/* ══════════════════════════════════════
+   SCAN LAUNCH
+══════════════════════════════════════ */
+async function startScan() {
+  const btn = document.getElementById('scanBtn');
+  btn.disabled = true;
+
+  let body, endpoint, label;
+
+  if (currentTab === 'github') {
+    const url = document.getElementById('repoUrl').value.trim();
+    if (!url) { alert('Entrez une URL GitHub.'); btn.disabled = false; return; }
+    body     = { repo_url: url, branch: document.getElementById('branch').value || 'main', max_iterations: +document.getElementById('maxIter').value };
+    endpoint = '/scan/github';
+    label    = url.replace('https://github.com/', '');
+  } else {
+    const path = document.getElementById('repoPath').value.trim();
+    if (!path) { alert('Entrez un chemin local.'); btn.disabled = false; return; }
+    body     = { repo_path: path, max_iterations: +document.getElementById('maxIterLocal').value };
+    endpoint = '/scan/local';
+    label    = path.split(/[\\/]/).pop();
+  }
+
+  try {
+    const r    = await fetch(`${API}${endpoint}`, { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+    const data = await r.json();
+    if (!r.ok) throw new Error(data.detail || 'Erreur API');
+
+    activeScanId = data.scan_id;
+    showProgress(label, activeScanId);
+    pollScan(endpoint.replace('POST','GET'), activeScanId, label);
+  } catch(e) {
+    alert('Erreur : ' + e.message);
+    btn.disabled = false;
+  }
+}
+
+/* ══════════════════════════════════════
+   PROGRESS VIEW
+══════════════════════════════════════ */
+function showProgress(label, scanId) {
+  document.getElementById('emptyState').style.display  = 'none';
+  document.getElementById('resultsView').style.display = 'none';
+  document.getElementById('progressView').style.display = '';
+
+  document.getElementById('progressRepo').textContent = label + ' · scan_id: ' + scanId.slice(0,8) + '…';
+  renderPipeline('waiting');
+  clearLog();
+  addLog('Scan lancé — ' + label, 'ok');
+}
+
+function renderPipeline(stateMap) {
+  // stateMap: 'waiting' | {agentKey: 'waiting'|'active'|'done'|'error'}
+  const grid = document.getElementById('pipelineGrid');
+  grid.innerHTML = '';
+  AGENTS.forEach(ag => {
+    const st = typeof stateMap === 'string' ? stateMap : (stateMap[ag.key] || 'waiting');
+    const card = document.createElement('div');
+    card.className = `agent-card ${st}`;
+    card.innerHTML = `
+      ${st === 'active' ? '<div class="spinner"></div>' : ''}
+      <div class="agent-icon">${ag.icon}</div>
+      <div class="agent-name">${ag.name}</div>
+      <div class="agent-state">${st === 'active' ? 'En cours…' : st === 'done' ? 'Terminé' : st === 'error' ? 'Erreur' : 'En attente'}</div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+/* ══════════════════════════════════════
+   LOG
+══════════════════════════════════════ */
+function clearLog() { document.getElementById('scanLog').innerHTML = ''; }
+function addLog(msg, type='') {
+  const el  = document.getElementById('scanLog');
+  const now = new Date().toLocaleTimeString('fr-FR', {hour:'2-digit', minute:'2-digit', second:'2-digit'});
+  const line = document.createElement('div');
+  line.className = 'log-line';
+  line.innerHTML = `<span class="log-time">${now}</span><span class="log-msg ${type}">${msg}</span>`;
+  el.appendChild(line);
+  el.scrollTop = el.scrollHeight;
+}
+
+/* ══════════════════════════════════════
+   POLLING
+══════════════════════════════════════ */
+let agentOrder = AGENTS.map(a => a.key);
+let doneAgents = [];
+
+function pollScan(_, scanId, label) {
+  doneAgents = [];
+  clearInterval(pollTimer);
+
+  const typeEndpoint = currentTab === 'github' ? '/scan/github' : '/scan/local';
+
+  pollTimer = setInterval(async () => {
+    try {
+      const r    = await fetch(`${API}${typeEndpoint}/${scanId}`);
+      const data = await r.json();
+
+      // Simulate agent progress based on current_agent field
+      const currentAgent = data.current_agent || data.report?.current_agent;
+      if (currentAgent && !doneAgents.includes(currentAgent)) {
+        const idx = agentOrder.indexOf(currentAgent);
+        doneAgents = agentOrder.slice(0, idx);
+        const stateMap = {};
+        agentOrder.forEach((k, i) => {
+          if (i < idx)           stateMap[k] = 'done';
+          else if (i === idx)    stateMap[k] = 'active';
+          else                   stateMap[k] = 'waiting';
+        });
+        renderPipeline(stateMap);
+        addLog(`Agent actif : ${currentAgent}`);
+      }
+
+      if (data.status === 'completed') {
+        clearInterval(pollTimer);
+
+        // All done
+        const allDone = {};
+        agentOrder.forEach(k => allDone[k] = 'done');
+        renderPipeline(allDone);
+        addLog('Scan terminé ✓', 'ok');
+
+        // Save history
+        const vulnCount = data.report?.statistics?.total || 0;
+        saveHistory({ scanId, label, vulnCount, status: 'completed', ts: Date.now() });
+
+        // Show results after short delay
+        setTimeout(() => showResults(data, label), 600);
+        document.getElementById('scanBtn').disabled = false;
+
+      } else if (data.status === 'failed') {
+        clearInterval(pollTimer);
+        addLog('Scan échoué : ' + (data.error || ''), 'err');
+        renderPipeline('error');
+        document.getElementById('scanBtn').disabled = false;
+      }
+    } catch(e) {
+      addLog('Erreur polling : ' + e.message, 'err');
+    }
+  }, 2000);
+}
+
+/* ══════════════════════════════════════
+   RESULTS VIEW
+══════════════════════════════════════ */
+function showResults(data, label) {
+  document.getElementById('progressView').style.display = 'none';
+  document.getElementById('resultsView').style.display  = '';
+
+  document.getElementById('resultTitle').textContent = 'Résultats — ' + label;
+  document.getElementById('resultRepo').textContent  = 'scan_id: ' + (data.scan_id || activeScanId);
+
+  const report = data.report || {};
+  const stats  = report.statistics || {};
+  const vulns  = report.vulnerabilities || [];
+  const patches = report.patches || {};
+
+  // Stats cards
+  document.getElementById('statsGrid').innerHTML = `
+    <div class="stat-card"><div class="s-val s-total">${stats.total || 0}</div><div class="s-label">Total</div></div>
+    <div class="stat-card"><div class="s-val s-critical">${(stats.by_severity||{}).critical||0}</div><div class="s-label">Critical</div></div>
+    <div class="stat-card"><div class="s-val s-high">${(stats.by_severity||{}).high||0}</div><div class="s-label">High</div></div>
+    <div class="stat-card"><div class="s-val s-medium">${(stats.by_severity||{}).medium||0}</div><div class="s-label">Medium</div></div>
+    <div class="stat-card"><div class="s-val s-patched">${patches.applied||0}</div><div class="s-label">Patchées</div></div>
+  `;
+
+  allVulns = vulns;
+  activeFilter = 'all';
+  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+  document.querySelector('.filter-btn').classList.add('active');
+  renderVulns();
+}
+
+/* ══════════════════════════════════════
+   VULN RENDERING
+══════════════════════════════════════ */
+function setFilter(f, btn) {
+  activeFilter = f;
+  document.querySelectorAll('#filterBar .filter-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderVulns();
+}
+
+function renderVulns() {
+  let list = allVulns;
+  if (activeFilter !== 'all') {
+    if (activeFilter === 'patched') {
+      list = list.filter(v => v.patch_applied);
+    } else {
+      list = list.filter(v => v.severity === activeFilter);
+    }
+  }
+
+  document.getElementById('vulnCount').textContent = list.length;
+  const container = document.getElementById('vulnList');
+
+  if (!list.length) {
+    container.innerHTML = `<div class="no-vuln">✨ Aucune vulnérabilité dans cette catégorie</div>`;
+    return;
+  }
+
+  container.innerHTML = list.map((v, i) => {
+    const cvssClass = v.cvss_score >= 9 ? 'cvss-c' : v.cvss_score >= 7 ? 'cvss-h' : v.cvss_score >= 4 ? 'cvss-m' : 'cvss-l';
+    const patchTag  = v.patch_applied
+      ? '<span class="patch-tag patch-applied">✓ Patché</span>'
+      : v.patch_diff
+        ? '<span class="patch-tag patch-rejected">✗ Rejeté</span>'
+        : '<span class="patch-tag patch-none">— Non patché</span>';
+
+    const snippet = (v.code_snippet||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    const diff    = renderDiff(v.patch_diff || '');
+
+    return `
+    <div class="vuln-card" id="vc${i}">
+      <div class="vuln-head" onclick="toggleCard(${i})">
+        <div class="sev-bar sev-${v.severity||'info'}"></div>
+        <div class="vuln-main">
+          <div class="vuln-title">${escHtml(v.title||'Untitled')}</div>
+          <div class="vuln-meta">
+            <span>📁 ${escHtml(v.file_path||'')}</span>
+            <span>📍 L.${v.line_start||'?'}</span>
+            <span>🏷 ${escHtml(v.cwe_id||'')}</span>
+          </div>
+        </div>
+        <div class="vuln-right">
+          ${v.cvss_score ? `<span class="cvss-badge ${cvssClass}">CVSS ${v.cvss_score.toFixed(1)}</span>` : ''}
+          ${patchTag}
+          <span class="chevron">▼</span>
+        </div>
+      </div>
+      <div class="vuln-detail">
+        ${v.description ? `<div><div class="detail-label">Description</div><div class="desc-text">${escHtml(v.description)}</div></div>` : ''}
+        ${snippet ? `<div><div class="detail-label">Code concerné</div><pre class="snippet">${snippet}</pre></div>` : ''}
+        ${diff    ? `<div><div class="detail-label">Patch généré</div><pre class="diff">${diff}</pre></div>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleCard(i) {
+  document.getElementById('vc'+i).classList.toggle('open');
+}
+
+function renderDiff(raw) {
+  if (!raw) return '';
+  return raw.split('\n').map(line => {
+    const esc = line.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    if (line.startsWith('+') && !line.startsWith('+++')) return `<span class="diff-add">${esc}</span>`;
+    if (line.startsWith('-') && !line.startsWith('---')) return `<span class="diff-rem">${esc}</span>`;
+    return `<span class="diff-ctx">${esc}</span>`;
+  }).join('\n');
+}
+
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+/* ══════════════════════════════════════
+   HISTORY
+══════════════════════════════════════ */
+function saveHistory(entry) {
+  scanHistory.unshift(entry);
+  scanHistory = scanHistory.slice(0, 8);
+  localStorage.setItem('mas_history', JSON.stringify(scanHistory));
+  renderHistory();
+}
+
+function renderHistory() {
+  const el = document.getElementById('historyList');
+  if (!scanHistory.length) {
+    el.innerHTML = `<div style="font-size:.75rem;color:var(--text-3);text-align:center;padding:.5rem">Aucun scan récent</div>`;
+    return;
+  }
+  el.innerHTML = scanHistory.map(h => `
+    <div class="history-item">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="h-name">${escHtml(h.label)}</div>
+        <span class="badge badge-${h.status==='completed'?'ok':'fail'}">${h.status==='completed'?'✓ OK':'✗ Fail'}</span>
+      </div>
+      <div class="h-meta">${h.vulnCount} vulnérabilités · ${new Date(h.ts).toLocaleString('fr-FR')}</div>
+    </div>
+  `).join('');
+}
+
+function resetView() {
+  document.getElementById('resultsView').style.display  = 'none';
+  document.getElementById('progressView').style.display = 'none';
+  document.getElementById('emptyState').style.display   = '';
+  document.getElementById('scanBtn').disabled = false;
+}
+
+/* ══════════════════════════════════════
+   INIT
+══════════════════════════════════════ */
+renderHistory();
+</script>
+</body>
+</html>
