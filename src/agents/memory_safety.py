@@ -67,6 +67,7 @@ class MemorySafetyAgent(BaseAgent):
                 text=True,
                 timeout=120,
             )
+
             if result.returncode != 0:
                 logger.error("[memory_safety] engine stderr: %s", result.stderr)
                 state.errors.append(f"memory_safety: engine exited {result.returncode}")

@@ -1,0 +1,8 @@
+# Afficher uniquement les findings (sans les stats)
+.\memory-engine\bins\windows\memory-engine.exe --json .\memory-engine\tests\fixtures\ | ConvertFrom-Json | Select-Object -ExpandProperty findings | Format-Table rule_id, severity, file, line_start -AutoSize
+
+# Afficher uniquement les stats
+.\memory-engine\bins\windows\memory-engine.exe --json .\memory-engine\tests\fixtures\ | ConvertFrom-Json | Select-Object -ExpandProperty stats
+
+# Sauvegarder le rapport JSON dans un fichier
+.\memory-engine\bins\windows\memory-engine.exe --json .\memory-engine\tests\fixtures\ > rapport.json
